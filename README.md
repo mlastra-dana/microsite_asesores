@@ -14,12 +14,15 @@ npm run build
 
 ## Rutas demo
 
+- `/provisionar?danaparam=abc123-def456-ghi789`
 - `/asesor/laura-lepage`
 - `/asesor/carlos-mendoza`
 - `/asesor/valentina-rojas`
 - `/asesor/laura-lepage/actualizar`
 
 Si el `advisorId` no existe, la app muestra los datos demo de Laura Lepage.
+
+La ruta `/provisionar` es la URL inicial para usar desde DANAconnect. Recibe `danaparam`, llama la Lambda y redirige al microsite limpio que devuelve el backend.
 
 ## AWS Amplify
 
@@ -31,7 +34,7 @@ Configuracion de build:
 Variable opcional:
 
 ```bash
-VITE_API_URL=https://xxxxx.lambda-url.region.on.aws/
+VITE_API_URL=https://cgqoxs2wgjcadbdm2xv7rkbevi0dqyfr.lambda-url.us-east-1.on.aws/
 ```
 
 Si `VITE_API_URL` no esta configurada, las solicitudes de cotizacion y actualizacion se guardan en `localStorage` para mantener la demo funcional sin backend.

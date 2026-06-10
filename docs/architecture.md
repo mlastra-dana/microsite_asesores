@@ -5,7 +5,7 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 ## Flujo esperado
 
 1. La app en Amplify recibe una visita a una URL inicial del asesor.
-2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API o DANAconnect para traer el registro del asesor desde la lista de contactos.
+2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API de DANAconnect para traer el registro del asesor desde la lista de contactos usando `danaparam`.
 3. La Lambda normaliza los datos, genera un slug limpio y guarda el registro en DynamoDB.
 4. El usuario queda redirigido o resuelto hacia una URL limpia, por ejemplo `/asesor/laura-lepage`.
 5. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
@@ -15,7 +15,7 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 
 ## Backend
 
-El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/index.py` y por ahora funciona como demo sin dependencias externas.
+El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/index.py`, usa librerias estandar para llamar a DANAconnect y usa `boto3` opcional para DynamoDB.
 
 Eventos previstos:
 
@@ -42,3 +42,13 @@ DynamoDB seria la base para guardar:
 ## Importante
 
 La demo frontend debe seguir funcionando sin backend real. Si `VITE_API_URL` no existe, los eventos se guardan en `localStorage`.
+
+## Variables Lambda
+
+- `DANA_ACCESS_TOKEN`: token Bearer para Data Retrieval API.
+- `DANA_BASE_URL`: por defecto `https://appserv.danaconnect.com`.
+- `DANA_DATA_FIELDS`: campos a pedir a DANAconnect.
+- `DANA_FIELDS_QUERY_PARAM`: nombre del query parameter para pedir campos; por defecto `fields`.
+- `MICROSITE_BASE_URL`: dominio publico de Amplify o dominio custom.
+- `DYNAMODB_TABLE`: tabla donde guardar registros y eventos.
+- `CORS_ORIGIN`: origen permitido para el frontend.
