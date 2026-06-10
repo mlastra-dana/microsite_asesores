@@ -20,7 +20,7 @@ export default function ProductCard({ product, onRequest }: ProductCardProps) {
         onClick={() => onRequest(product.title)}
         className="mt-5 rounded-full bg-example-navy px-5 py-3 text-sm font-extrabold text-white transition hover:bg-example-violet"
       >
-        Solicitar información
+        Cotizar
       </button>
     </article>
   );

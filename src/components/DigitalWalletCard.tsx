@@ -70,10 +70,9 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
             Contacto, perfil profesional y acceso rápido desde el celular.
           </h2>
           <p className="mt-4 text-lg leading-8 text-dana-muted">
-            El carnet digital apunta al microsite del asesor para que cada cliente pueda guardar el contacto,
+            El carnet digital permite a cada cliente guardar el contacto,
             revisar productos y solicitar una cotizacion desde cualquier dispositivo.
           </p>
-          <p className="mt-5 break-all rounded-2xl bg-dana-cloud p-4 text-sm font-semibold text-dana-muted">{micrositeUrl}</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"

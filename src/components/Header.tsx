@@ -19,7 +19,7 @@ export default function Header({ advisor }: HeaderProps) {
         <nav className="hidden items-center gap-6 text-sm font-semibold text-dana-muted md:flex">
           <a href="#inicio" className="hover:text-example-violet">Inicio</a>
           <a href="#productos" className="hover:text-example-violet">Productos</a>
-          <a href="#cotizar" className="hover:text-example-violet">Cotizar</a>
+          <a href="#postventa" className="hover:text-example-violet">Post-Venta</a>
           <Link to={`/asesor/${advisor.id}/actualizar`} className="text-example-violet hover:text-example-purple">
             Actualizar datos
           </Link>
