@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+import base64
 import time
 import unicodedata
 import urllib.error
@@ -21,6 +22,11 @@ CORS_HEADERS = {
 }
 
 DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
+DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "")
+DANA_CLIENT_ID = os.environ.get("DANA_CLIENT_ID", "")
+DANA_CLIENT_SECRET = os.environ.get("DANA_CLIENT_SECRET", "")
+DANA_OAUTH_SCOPE = os.environ.get("DANA_OAUTH_SCOPE", "")
+DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
     "EMAIL,NAME,PHONE_NUMBER,WHATSAPP,CITY,ADVISOR_CODE,ROLE,PHOTO_URL,BIO,PRODUCTS",
@@ -28,6 +34,7 @@ DANA_DATA_FIELDS = os.environ.get(
 DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fields")
 MICROSITE_BASE_URL = os.environ.get("MICROSITE_BASE_URL", "https://example.com")
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "")
+TOKEN_CACHE = {"access_token": None, "expires_at": 0}
 
 
 def response(status_code, body):
@@ -66,11 +73,67 @@ def validate_required(payload, fields):
     return [field for field in fields if not payload.get(field)]
 
 
+def parse_token_response(raw_body):
+    data = json.loads(raw_body)
+    access_token = data.get("access_token")
+    if not access_token:
+        raise RuntimeError(f"OAuth response sin access_token: {raw_body}")
+
+    expires_in = int(data.get("expires_in", 300))
+    TOKEN_CACHE["access_token"] = access_token
+    TOKEN_CACHE["expires_at"] = int(time.time()) + max(expires_in - 30, 30)
+    return access_token
+
+
+def request_oauth_token():
+    if not DANA_TOKEN_URL:
+        raise ValueError("Falta variable de entorno DANA_TOKEN_URL")
+    if not DANA_CLIENT_ID or not DANA_CLIENT_SECRET:
+        raise ValueError("Faltan variables DANA_CLIENT_ID y/o DANA_CLIENT_SECRET")
+
+    payload = {"grant_type": "client_credentials"}
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+
+    if DANA_OAUTH_SCOPE:
+        payload["scope"] = DANA_OAUTH_SCOPE
+
+    if DANA_OAUTH_AUTH_METHOD == "body":
+        payload["client_id"] = DANA_CLIENT_ID
+        payload["client_secret"] = DANA_CLIENT_SECRET
+    else:
+        credentials = f"{DANA_CLIENT_ID}:{DANA_CLIENT_SECRET}".encode("utf-8")
+        headers["Authorization"] = f"Basic {base64.b64encode(credentials).decode('utf-8')}"
+
+    request = urllib.request.Request(
+        DANA_TOKEN_URL,
+        data=urllib.parse.urlencode(payload).encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=12) as result:
+            raw_body = result.read().decode("utf-8")
+            return parse_token_response(raw_body)
+    except urllib.error.HTTPError as error:
+        error_body = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"DANA OAuth respondió {error.code}: {error_body}") from error
+    except urllib.error.URLError as error:
+        raise RuntimeError(f"No se pudo conectar con DANA OAuth: {error.reason}") from error
+
+
 def get_access_token():
-    token = os.environ.get("DANA_ACCESS_TOKEN")
-    if not token:
-        raise ValueError("Falta variable de entorno DANA_ACCESS_TOKEN")
-    return token
+    manual_token = os.environ.get("DANA_ACCESS_TOKEN")
+    if manual_token:
+        return manual_token
+
+    if TOKEN_CACHE["access_token"] and TOKEN_CACHE["expires_at"] > int(time.time()):
+        return TOKEN_CACHE["access_token"]
+
+    return request_oauth_token()
 
 
 def dana_data_url(danaparam):
@@ -322,6 +385,7 @@ def lambda_handler(event, context):
                 "ok": True,
                 "message": "Microsite Lambda activa",
                 "usage": "POST { type: 'landing_provision', danaparam: '...' } o GET ?danaparam=...",
+                "authMode": "manual_token" if os.environ.get("DANA_ACCESS_TOKEN") else "oauth_client_credentials",
             },
         )
 

@@ -16,11 +16,26 @@ Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de 
 
 ## Variables de entorno
 
-Obligatorias para traer datos desde DANAconnect:
+Opcion A, token manual temporal:
 
 ```bash
 DANA_ACCESS_TOKEN=ey...
 ```
+
+Opcion B, recomendada, OAuth2 client credentials:
+
+```bash
+DANA_TOKEN_URL=https://...
+DANA_CLIENT_ID=...
+DANA_CLIENT_SECRET=...
+DANA_OAUTH_SCOPE=...
+DANA_OAUTH_AUTH_METHOD=basic
+```
+
+`DANA_OAUTH_AUTH_METHOD` puede ser:
+
+- `basic`: envia `client_id:client_secret` en Authorization Basic. Es el modo por defecto.
+- `body`: envia `client_id` y `client_secret` en el body form-urlencoded.
 
 Recomendadas:
 
@@ -51,6 +66,12 @@ Accept: application/json
 ```
 
 Los campos se controlan con `DANA_DATA_FIELDS`. La documentacion tambien menciona `fieldList` como query parameter; por eso el nombre del parametro queda configurable con `DANA_FIELDS_QUERY_PARAM`. El curl de ejemplo oficial usa `fields`, que es el valor por defecto de esta Lambda.
+
+La Lambda obtiene el Bearer token asi:
+
+1. Si existe `DANA_ACCESS_TOKEN`, usa ese token directamente.
+2. Si no existe, pide un token con `DANA_TOKEN_URL`, `DANA_CLIENT_ID` y `DANA_CLIENT_SECRET`.
+3. Guarda el token en cache de memoria hasta casi su expiracion.
 
 ## Provisionar un microsite
 
