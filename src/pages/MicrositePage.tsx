@@ -1,15 +1,12 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import AdvisorCard from '../components/AdvisorCard';
-import DigitalWalletCard from '../components/DigitalWalletCard';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import QuoteForm from '../components/QuoteForm';
 import { getAdvisorById } from '../data/advisors';
 import { products } from '../data/products';
-import { getMicrositeUrl } from '../utils/qr';
 
 const ecosystemBullets = [
   'Ordenar la información comercial.',
@@ -26,11 +23,14 @@ export default function MicrositePage() {
   const advisor = getAdvisorById(advisorId);
   const quoteRef = useRef<HTMLElement>(null);
   const [selectedProduct, setSelectedProduct] = useState(products[0].title);
-  const micrositeUrl = useMemo(() => getMicrositeUrl(location.pathname), [location.pathname]);
 
   function handleRequest(product: string) {
     setSelectedProduct(product);
-    quoteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Scroll to post-venta section when clicking on product "Cotizar" button
+    const postVentaSection = document.getElementById('postventa');
+    if (postVentaSection) {
+      postVentaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   return (
@@ -40,8 +40,6 @@ export default function MicrositePage() {
         <div className="bg-[radial-gradient(circle_at_16%_12%,rgba(167,121,255,0.34),transparent_28%),radial-gradient(circle_at_92%_10%,rgba(243,237,255,0.18),transparent_24%),linear-gradient(135deg,#0F0F1F_0%,#4B16B6_58%,#6D28E0_100%)]">
           <AdvisorCard advisor={advisor} />
         </div>
-
-        <DigitalWalletCard advisor={advisor} micrositeUrl={micrositeUrl} />
 
         <section className="bg-dana-cloud py-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
