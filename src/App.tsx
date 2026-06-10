@@ -1,0 +1,15 @@
+import { Navigate, Route, Routes } from 'react-router-dom';
+import AdvisorEditPage from './pages/AdvisorEditPage';
+import MicrositePage from './pages/MicrositePage';
+import NotFoundPage from './pages/NotFoundPage';
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/asesor/laura-lepage" replace />} />
+      <Route path="/asesor/:advisorId" element={<MicrositePage />} />
+      <Route path="/asesor/:advisorId/actualizar" element={<AdvisorEditPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
