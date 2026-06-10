@@ -1,92 +1,136 @@
-export type MicrositeEventPayload = {
-  type: 'quote_request' | 'advisor_update' | 'pass_request' | 'landing_provision' | 'otp_request' | 'otp_verify';
+export type Advisor = {
   advisorId: string;
-  [key: string]: unknown;
+  name: string;
+  email: string;
+  phone: string;
+  whatsapp?: string;
+  city?: string;
+  advisorCode?: string;
+  role?: string;
+  photoUrl?: string;
+  bio?: string;
+  products?: string[];
 };
 
-export type ApiResult = {
+export type ProvisionResponse = {
   ok: boolean;
-  message: string;
-};
-
-export type ProvisionResult = ApiResult & {
+  message?: string;
+  type?: string;
   advisorId?: string;
+  danaparam?: string;
+  slug?: string;
   micrositeUrl?: string;
+  advisor?: Advisor;
+  persistence?: {
+    saved: boolean;
+    table: string;
+  };
 };
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
-export async function sendMicrositeEvent(payload: MicrositeEventPayload): Promise<ApiResult> {
+/**
+ * Llama a la Lambda de provisionamiento con el danaparam recibido en el email de DANAconnect
+ * @param danaparam Identificador interno de DANAconnect para la Data Retrieval API
+ * @returns Respuesta de la Lambda con la información del asesor provisionado
+ */
+export async function provisionAdvisor(danaparam: string): Promise<ProvisionResponse> {
+  // Validar que la variable de entorno esté configurada
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
   if (!apiUrl) {
-    const key = `microsite_events_${payload.type}`;
-    const current = JSON.parse(localStorage.getItem(key) ?? '[]') as MicrositeEventPayload[];
-    localStorage.setItem(key, JSON.stringify([...current, { ...payload, createdAt: new Date().toISOString() }]));
-    return { ok: true, message: 'Solicitud guardada localmente para la demo.' };
+    throw new Error('VITE_API_URL no está configurada en las variables de entorno.');
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}?danaparam=${encodeURIComponent(danaparam)}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    // Validar si la respuesta es JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // Intentar leer el cuerpo como texto para dar mejor error
+      const text = await response.text();
+      throw new Error(`Respuesta no válida de la API (${response.status}): ${text.substring(0, 100)}`);
+    }
+
+    const data = await response.json();
+
+    // Validar la estructura básica de la respuesta
+    if (typeof data !== 'object' || data === null) {
+      throw new Error('Respuesta de la API no es un objeto JSON válido');
+    }
+
+    // Si la respuesta HTTP no es OK, usar el mensaje de error si está disponible
+    if (!response.ok) {
+      const errorMessage = data.message || data.error || `Error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    return data as ProvisionResponse;
+  } catch (error) {
+    // Mejorar el mensaje de error para casos de red
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('No se pudo conectar con el servicio de activación. Verifica tu conexión o contacta al administrador.');
+    }
+    
+    // Re-lanzar el error para manejo específico en el componente
+    throw error;
+  }
+}
+/**
+ * Función de compatibilidad para mantener el código existente.
+ * Envía un evento simple a la Lambda (quote_request, advisor_update, pass_request, etc.)
+ */
+export async function sendMicrositeEvent(payload: {
+  type: 'quote_request' | 'advisor_update' | 'pass_request' | 'otp_request' | 'otp_verify';
+  advisorId: string;
+  [key: string]: any;
+}) {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    return {
+      ok: false,
+      message: 'VITE_API_URL no está configurada',
+    };
   }
 
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(payload),
     });
 
-    const data = (await response.json().catch(() => ({}))) as Partial<ApiResult>;
-
-    if (!response.ok) {
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
       return {
         ok: false,
-        message: data.message ?? 'No pudimos enviar la solicitud. Intenta nuevamente.',
+        message: `Respuesta no válida: ${response.status} ${response.statusText}`,
       };
     }
 
-    return {
-      ok: data.ok ?? true,
-      message: data.message ?? 'Solicitud recibida correctamente.',
-    };
-  } catch {
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error sending microsite event:', error);
     return {
       ok: false,
-      message: 'No pudimos conectar con el servicio. Intenta nuevamente.',
+      message: error instanceof Error ? error.message : 'Error desconocido',
     };
   }
 }
 
-export async function provisionMicrosite(danaparam: string): Promise<ProvisionResult> {
-  if (!apiUrl) {
-    return {
-      ok: false,
-      message: 'VITE_API_URL no está configurada. No se puede provisionar el microsite.',
-    };
-  }
-
-  try {
-    const url = new URL(apiUrl);
-    url.searchParams.set('danaparam', danaparam);
-
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    const data = (await response.json().catch(() => ({}))) as ProvisionResult;
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        message: data.message ?? 'No pudimos provisionar el microsite.',
-      };
-    }
-
-    return {
-      ok: data.ok ?? true,
-      message: data.message ?? 'Microsite provisionado correctamente.',
-      advisorId: data.advisorId,
-      micrositeUrl: data.micrositeUrl,
-    };
-  } catch {
-    return {
-      ok: false,
-      message: 'No pudimos conectar con la Lambda de provisionamiento.',
-    };
-  }
+/**
+ * Función de compatibilidad para mantener ProvisionPage.tsx
+ * @deprecated Use provisionAdvisor instead
+ */
+export async function provisionMicrosite(danaparam: string) {
+  return provisionAdvisor(danaparam);
 }

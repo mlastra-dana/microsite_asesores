@@ -1,8 +1,8 @@
+import base64
 import hashlib
 import json
 import os
 import re
-import base64
 import time
 import unicodedata
 import urllib.error
@@ -21,20 +21,29 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 }
 
-DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
-DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "")
+DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "https://auth.danaconnect.com/oauth2/token")
 DANA_CLIENT_ID = os.environ.get("DANA_CLIENT_ID", "")
 DANA_CLIENT_SECRET = os.environ.get("DANA_CLIENT_SECRET", "")
-DANA_OAUTH_SCOPE = os.environ.get("DANA_OAUTH_SCOPE", "")
-DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
+
+DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
-    "EMAIL,NAME,PHONE_NUMBER,WHATSAPP,CITY,ADVISOR_CODE,ROLE,PHOTO_URL,BIO,PRODUCTS",
+    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR",
 )
-DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fields")
-MICROSITE_BASE_URL = os.environ.get("MICROSITE_BASE_URL", "https://example.com")
+
+DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
+
+MICROSITE_BASE_URL = os.environ.get(
+    "MICROSITE_BASE_URL",
+    "https://main.d1w0srn8uz6n.amplifyapp.com",
+)
+
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "")
-TOKEN_CACHE = {"access_token": None, "expires_at": 0}
+
+TOKEN_CACHE = {
+    "access_token": None,
+    "expires_at": 0,
+}
 
 
 def response(status_code, body):
@@ -47,10 +56,13 @@ def response(status_code, body):
 
 def parse_body(event):
     body = event.get("body")
+
     if body is None:
         return {}
+
     if isinstance(body, dict):
         return body
+
     try:
         return json.loads(body)
     except json.JSONDecodeError:
@@ -73,80 +85,84 @@ def validate_required(payload, fields):
     return [field for field in fields if not payload.get(field)]
 
 
-def parse_token_response(raw_body):
-    data = json.loads(raw_body)
-    access_token = data.get("access_token")
-    if not access_token:
-        raise RuntimeError(f"OAuth response sin access_token: {raw_body}")
+def get_oauth_token():
+    now = int(time.time())
 
-    expires_in = int(data.get("expires_in", 300))
-    TOKEN_CACHE["access_token"] = access_token
-    TOKEN_CACHE["expires_at"] = int(time.time()) + max(expires_in - 30, 30)
-    return access_token
+    if TOKEN_CACHE["access_token"] and TOKEN_CACHE["expires_at"] > now + 60:
+        return TOKEN_CACHE["access_token"]
 
+    if not DANA_CLIENT_ID:
+        raise ValueError("Falta variable de entorno DANA_CLIENT_ID")
 
-def request_oauth_token():
-    if not DANA_TOKEN_URL:
-        raise ValueError("Falta variable de entorno DANA_TOKEN_URL")
-    if not DANA_CLIENT_ID or not DANA_CLIENT_SECRET:
-        raise ValueError("Faltan variables DANA_CLIENT_ID y/o DANA_CLIENT_SECRET")
+    if not DANA_CLIENT_SECRET:
+        raise ValueError("Falta variable de entorno DANA_CLIENT_SECRET")
 
-    payload = {"grant_type": "client_credentials"}
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
+    form_data = urllib.parse.urlencode({
+        "grant_type": "client_credentials"
+    }).encode("utf-8")
 
-    if DANA_OAUTH_SCOPE:
-        payload["scope"] = DANA_OAUTH_SCOPE
-
-    if DANA_OAUTH_AUTH_METHOD == "body":
-        payload["client_id"] = DANA_CLIENT_ID
-        payload["client_secret"] = DANA_CLIENT_SECRET
-    else:
-        credentials = f"{DANA_CLIENT_ID}:{DANA_CLIENT_SECRET}".encode("utf-8")
-        headers["Authorization"] = f"Basic {base64.b64encode(credentials).decode('utf-8')}"
+    credentials = f"{DANA_CLIENT_ID}:{DANA_CLIENT_SECRET}"
+    basic_auth = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
 
     request = urllib.request.Request(
         DANA_TOKEN_URL,
-        data=urllib.parse.urlencode(payload).encode("utf-8"),
-        headers=headers,
+        data=form_data,
+        headers={
+            "Authorization": f"Basic {basic_auth}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+        },
         method="POST",
     )
 
     try:
         with urllib.request.urlopen(request, timeout=12) as result:
             raw_body = result.read().decode("utf-8")
-            return parse_token_response(raw_body)
+            token_response = json.loads(raw_body)
+
     except urllib.error.HTTPError as error:
         error_body = error.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"DANA OAuth respondió {error.code}: {error_body}") from error
+        raise RuntimeError(
+            f"No se pudo generar token DANAconnect. HTTP {error.code}: {error_body}"
+        ) from error
+
     except urllib.error.URLError as error:
-        raise RuntimeError(f"No se pudo conectar con DANA OAuth: {error.reason}") from error
+        raise RuntimeError(
+            f"No se pudo conectar al token endpoint de DANAconnect: {error.reason}"
+        ) from error
 
+    access_token = token_response.get("access_token")
 
-def get_access_token():
-    manual_token = os.environ.get("DANA_ACCESS_TOKEN")
-    if manual_token:
-        return manual_token
+    if not access_token:
+        raise RuntimeError(f"DANAconnect no devolvio access_token: {token_response}")
 
-    if TOKEN_CACHE["access_token"] and TOKEN_CACHE["expires_at"] > int(time.time()):
-        return TOKEN_CACHE["access_token"]
+    expires_in = int(token_response.get("expires_in", 3600))
 
-    return request_oauth_token()
+    TOKEN_CACHE["access_token"] = access_token
+    TOKEN_CACHE["expires_at"] = now + expires_in
+
+    return access_token
 
 
 def dana_data_url(danaparam):
     encoded_param = urllib.parse.quote(str(danaparam), safe="")
-    query = urllib.parse.urlencode({DANA_FIELDS_QUERY_PARAM: DANA_DATA_FIELDS})
-    return f"{DANA_BASE_URL}/api/2.0/rest/conversation/data/{encoded_param}?{query}"
+    query = urllib.parse.urlencode({
+        DANA_FIELDS_QUERY_PARAM: DANA_DATA_FIELDS
+    })
+
+    return f"{DANA_BASE_URL.rstrip('/')}/api/2.0/rest/conversation/data/{encoded_param}?{query}"
 
 
 def fetch_dana_contact(danaparam):
+    access_token = get_oauth_token()
+    url = dana_data_url(danaparam)
+
+    print("Consultando DANAconnect URL:", url)
+
     request = urllib.request.Request(
-        dana_data_url(danaparam),
+        url,
         headers={
-            "Authorization": f"Bearer {get_access_token()}",
+            "Authorization": f"Bearer {access_token}",
             "Accept": "application/json",
         },
         method="GET",
@@ -155,12 +171,25 @@ def fetch_dana_contact(danaparam):
     try:
         with urllib.request.urlopen(request, timeout=12) as result:
             raw_body = result.read().decode("utf-8")
+            print("Respuesta DANAconnect:", raw_body)
             return json.loads(raw_body)
+
     except urllib.error.HTTPError as error:
         error_body = error.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"DANAconnect respondió {error.code}: {error_body}") from error
+        print("Error HTTP DANAconnect:", error.code, error_body)
+        print("URL usada:", url)
+
+        raise RuntimeError(
+            f"DANAconnect respondio {error.code}: {error_body}"
+        ) from error
+
     except urllib.error.URLError as error:
-        raise RuntimeError(f"No se pudo conectar con DANAconnect: {error.reason}") from error
+        print("Error conexion DANAconnect:", error.reason)
+        print("URL usada:", url)
+
+        raise RuntimeError(
+            f"No se pudo conectar con DANAconnect: {error.reason}"
+        ) from error
 
 
 def first_value(*values, default=""):
@@ -170,13 +199,45 @@ def first_value(*values, default=""):
     return default
 
 
-def get_nested_value(data, *keys):
-    current = data
-    for key in keys:
-        if not isinstance(current, dict):
-            return None
-        current = current.get(key)
-    return current
+def extract_field(data, code):
+    if not isinstance(data, dict):
+        return ""
+
+    candidates = []
+
+    candidates.append(data.get(code))
+    candidates.append(data.get(code.upper()))
+    candidates.append(data.get(code.lower()))
+
+    record = data.get("record")
+    if isinstance(record, dict):
+        candidates.append(record.get(code))
+        candidates.append(record.get(code.upper()))
+        candidates.append(record.get(code.lower()))
+
+    fields = data.get("fields")
+    if isinstance(fields, dict):
+        candidates.append(fields.get(code))
+        candidates.append(fields.get(code.upper()))
+        candidates.append(fields.get(code.lower()))
+
+    contact = data.get("contact")
+    if isinstance(contact, dict):
+        candidates.append(contact.get(code))
+        candidates.append(contact.get(code.upper()))
+        candidates.append(contact.get(code.lower()))
+
+    data_fields = data.get("data")
+    if isinstance(data_fields, dict):
+        candidates.append(data_fields.get(code))
+        candidates.append(data_fields.get(code.upper()))
+        candidates.append(data_fields.get(code.lower()))
+
+    for value in candidates:
+        if value not in (None, ""):
+            return value
+
+    return ""
 
 
 def normalize_dana_response(data):
@@ -186,46 +247,31 @@ def normalize_dana_response(data):
     if not isinstance(data, dict):
         data = {}
 
-    fields = data.get("fields") if isinstance(data.get("fields"), dict) else {}
-    contact = data.get("contact") if isinstance(data.get("contact"), dict) else {}
-
-    name = first_value(data.get("NAME"), fields.get("NAME"), contact.get("NAME"), data.get("name"))
-    email = first_value(data.get("EMAIL"), fields.get("EMAIL"), contact.get("EMAIL"), data.get("email"))
-    phone = first_value(
-        data.get("PHONE_NUMBER"),
-        fields.get("PHONE_NUMBER"),
-        contact.get("PHONE_NUMBER"),
-        data.get("phone"),
-    )
-
-    products = first_value(data.get("PRODUCTS"), fields.get("PRODUCTS"), contact.get("PRODUCTS"), default=[])
-    if isinstance(products, str):
-        products = [item.strip() for item in products.split(",") if item.strip()]
-    if not isinstance(products, list):
-        products = []
+    advisor_id = extract_field(data, "ADVISORID")
+    name = extract_field(data, "NOMBREASESOR")
+    email = extract_field(data, "EMAILASESOR")
+    phone = extract_field(data, "TELEFONOASESOR")
+    advisor_code = extract_field(data, "CODIGOASESOR")
+    photo_url = extract_field(data, "FOTOASESOR")
 
     advisor = {
-        "name": name or "Asesor de Seguros",
+        "advisorId": str(advisor_id).strip(),
+        "name": first_value(name, default="Asesor de Seguros"),
         "email": email,
         "phone": phone,
-        "whatsapp": first_value(data.get("WHATSAPP"), fields.get("WHATSAPP"), contact.get("WHATSAPP"), phone),
-        "city": first_value(data.get("CITY"), fields.get("CITY"), contact.get("CITY"), data.get("city")),
-        "advisorCode": first_value(
-            data.get("ADVISOR_CODE"),
-            fields.get("ADVISOR_CODE"),
-            contact.get("ADVISOR_CODE"),
-            data.get("advisorCode"),
-        ),
-        "role": first_value(
-            data.get("ROLE"),
-            fields.get("ROLE"),
-            contact.get("ROLE"),
-            data.get("role"),
-            default="Asesor de Seguros",
-        ),
-        "photoUrl": first_value(data.get("PHOTO_URL"), fields.get("PHOTO_URL"), contact.get("PHOTO_URL"), data.get("photoUrl")),
-        "bio": first_value(data.get("BIO"), fields.get("BIO"), contact.get("BIO"), data.get("bio")),
-        "products": products,
+        "whatsapp": phone,
+        "city": "",
+        "advisorCode": advisor_code,
+        "role": "Asesor de Seguros",
+        "photoUrl": photo_url,
+        "bio": "Especialista en soluciones de protección personal, familiar y patrimonial.",
+        "products": [
+            "Seguro de Salud",
+            "Seguro de Vida",
+            "Seguro de Auto",
+            "Seguro de Hogar",
+            "Seguro Empresarial",
+        ],
     }
 
     return advisor
@@ -244,8 +290,16 @@ def stable_suffix(value):
 
 def create_advisor_record(danaparam, dana_data):
     advisor = normalize_dana_response(dana_data)
-    base_slug = slugify(advisor["name"])
-    advisor_id = f"{base_slug}-{stable_suffix(danaparam)}"
+
+    advisor_id_from_dana = str(advisor.get("advisorId") or "").strip()
+
+    if advisor_id_from_dana:
+        advisor_id = advisor_id_from_dana
+    else:
+        base_slug = slugify(advisor.get("name", "asesor"))
+        advisor_id = f"{base_slug}-{stable_suffix(danaparam)}"
+        advisor["advisorId"] = advisor_id
+
     microsite_url = f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{advisor_id}"
 
     return {
@@ -262,22 +316,33 @@ def create_advisor_record(danaparam, dana_data):
 def dynamodb_table():
     if not DYNAMODB_TABLE or not boto3:
         return None
+
     return boto3.resource("dynamodb").Table(DYNAMODB_TABLE)
 
 
 def save_record(record):
     table = dynamodb_table()
+
     if not table:
         print("DynamoDB no configurado. Registro normalizado:", json.dumps(record, ensure_ascii=False))
-        return {"saved": False, "reason": "DYNAMODB_TABLE no configurada"}
+        return {
+            "saved": False,
+            "reason": "DYNAMODB_TABLE no configurada",
+        }
 
     table.put_item(Item=record)
-    return {"saved": True, "table": DYNAMODB_TABLE}
+
+    return {
+        "saved": True,
+        "table": DYNAMODB_TABLE,
+    }
 
 
 def save_event(payload):
     table = dynamodb_table()
+
     event_id = f"{payload.get('type', 'event')}#{int(time.time() * 1000)}"
+
     item = {
         "advisorId": payload.get("advisorId", "unknown"),
         "eventId": event_id,
@@ -288,18 +353,30 @@ def save_event(payload):
 
     if not table:
         print("Evento recibido sin DynamoDB:", json.dumps(item, ensure_ascii=False))
-        return {"saved": False, "reason": "DYNAMODB_TABLE no configurada"}
+        return {
+            "saved": False,
+            "reason": "DYNAMODB_TABLE no configurada",
+        }
 
     table.put_item(Item=item)
-    return {"saved": True, "table": DYNAMODB_TABLE}
+
+    return {
+        "saved": True,
+        "table": DYNAMODB_TABLE,
+    }
 
 
 def handle_landing_provision(payload):
-    danaparam = payload.get("danaparam") or payload.get("advisorId")
+    danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("advisorId")
+
     if not danaparam:
-        return response(400, {"ok": False, "message": "Falta danaparam"})
+        return response(400, {
+            "ok": False,
+            "message": "Falta danaparam",
+        })
 
     dana_data = fetch_dana_contact(danaparam)
+
     record = create_advisor_record(danaparam, dana_data)
     persistence = save_record(record)
 
@@ -315,8 +392,43 @@ def handle_landing_provision(payload):
     )
 
 
+def handle_get_advisor(query):
+    advisor_id = query.get("advisorId") or query.get("advisor_id")
+
+    if not advisor_id:
+        return response(400, {
+            "ok": False,
+            "message": "Falta advisorId",
+        })
+
+    table = dynamodb_table()
+
+    if not table:
+        return response(404, {
+            "ok": False,
+            "message": "DynamoDB no configurado. No se puede consultar advisor guardado.",
+        })
+
+    result = table.get_item(Key={"advisorId": advisor_id})
+    item = result.get("Item")
+
+    if not item:
+        return response(404, {
+            "ok": False,
+            "message": "Advisor no encontrado",
+            "advisorId": advisor_id,
+        })
+
+    return response(200, {
+        "ok": True,
+        "advisorId": advisor_id,
+        "record": item,
+    })
+
+
 def handle_simple_event(payload):
     event_type = payload.get("type")
+
     required_by_type = {
         "quote_request": [
             "advisorId",
@@ -326,16 +438,37 @@ def handle_simple_event(payload):
             "customerPhone",
             "product",
         ],
-        "advisor_update": ["advisorId", "name", "email", "phone", "city"],
-        "pass_request": ["advisorId", "advisorEmail", "platform", "micrositeUrl"],
-        "otp_request": ["advisorId", "email"],
-        "otp_verify": ["advisorId", "email", "otp"],
+        "advisor_update": [
+            "advisorId",
+            "name",
+            "email",
+            "phone",
+        ],
+        "pass_request": [
+            "advisorId",
+            "advisorEmail",
+            "platform",
+            "micrositeUrl",
+        ],
+        "otp_request": [
+            "advisorId",
+            "email",
+        ],
+        "otp_verify": [
+            "advisorId",
+            "email",
+            "otp",
+        ],
     }
 
     if event_type not in required_by_type:
-        return response(400, {"ok": False, "message": "Tipo de evento no soportado"})
+        return response(400, {
+            "ok": False,
+            "message": "Tipo de evento no soportado",
+        })
 
     missing = validate_required(payload, required_by_type[event_type])
+
     if missing:
         return response(
             400,
@@ -349,9 +482,6 @@ def handle_simple_event(payload):
 
     persistence = save_event(payload)
 
-    # pass_request: aqui se generaria .pkpass o pase Android y se podria devolver
-    # una URL firmada. otp_request / otp_verify: aqui se integraria generacion,
-    # expiracion y validacion de OTP.
     return response(
         200,
         {
@@ -364,44 +494,86 @@ def handle_simple_event(payload):
 
 
 def lambda_handler(event, context):
+    print("Evento recibido:", json.dumps(event, ensure_ascii=False))
+
     method = get_method(event)
 
     if method == "OPTIONS":
-        return response(200, {"ok": True, "message": "CORS preflight ok"})
+        return response(200, {
+            "ok": True,
+            "message": "CORS preflight ok",
+        })
 
     if method == "GET":
         query = get_query_params(event)
-        danaparam = query.get("danaparam")
+
+        danaparam = query.get("danaparam") or query.get("danaParam")
+        advisor_id = query.get("advisorId") or query.get("advisor_id")
+
         if danaparam:
             try:
-                return handle_landing_provision({"type": "landing_provision", "danaparam": danaparam})
+                return handle_landing_provision({
+                    "type": "landing_provision",
+                    "danaparam": danaparam,
+                })
             except Exception as error:
                 print("landing_provision_error:", str(error))
-                return response(502, {"ok": False, "message": str(error), "type": "landing_provision"})
+                return response(502, {
+                    "ok": False,
+                    "message": str(error),
+                    "type": "landing_provision",
+                })
+
+        if advisor_id:
+            try:
+                return handle_get_advisor(query)
+            except Exception as error:
+                print("get_advisor_error:", str(error))
+                return response(502, {
+                    "ok": False,
+                    "message": str(error),
+                    "type": "get_advisor",
+                })
 
         return response(
             200,
             {
                 "ok": True,
                 "message": "Microsite Lambda activa",
-                "usage": "POST { type: 'landing_provision', danaparam: '...' } o GET ?danaparam=...",
-                "authMode": "manual_token" if os.environ.get("DANA_ACCESS_TOKEN") else "oauth_client_credentials",
+                "usage": {
+                    "landing_provision_get": "GET ?danaparam=VALOR_DANA_PARAM_REAL",
+                    "landing_provision_post": "POST { type: 'landing_provision', danaparam: 'VALOR_DANA_PARAM_REAL' }",
+                    "get_advisor": "GET ?advisorId=24657722",
+                },
             },
         )
 
     if method != "POST":
-        return response(405, {"ok": False, "message": "Metodo no permitido"})
+        return response(405, {
+            "ok": False,
+            "message": "Metodo no permitido",
+        })
 
     payload = parse_body(event)
+
     if payload is None:
-        return response(400, {"ok": False, "message": "Body JSON invalido"})
+        return response(400, {
+            "ok": False,
+            "message": "Body JSON invalido",
+        })
 
     event_type = payload.get("type")
 
     try:
         if event_type == "landing_provision":
             return handle_landing_provision(payload)
+
         return handle_simple_event(payload)
+
     except Exception as error:
         print("lambda_error:", str(error))
-        return response(502, {"ok": False, "message": str(error), "type": event_type})
+        return response(502, {
+            "ok": False,
+            "message": str(error),
+            "type": event_type,
+        })

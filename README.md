@@ -53,3 +53,62 @@ La Lambda soporta:
 - `otp_verify`
 
 Por ahora imprime el evento en logs y devuelve una respuesta exitosa. En un entorno real, ahi se podria guardar en DynamoDB, disparar una automatizacion o enviar el evento a DANAconnect.
+
+
+## Flujo de activación DANAconnect
+
+### 1. Link en correo de DANAconnect
+DANAconnect envía un correo al asesor con un botón que contiene el siguiente link:
+
+```
+https://main.d1w0srn8uz6n.amplifyapp.com/activar?danaparam=$f{dana}
+```
+
+Cuando el asesor hace click, DANAconnect reemplaza `$f{dana}` por un identificador interno real (danaparam), que es el identificador usado para la Data Retrieval API.
+
+### 2. Variable de entorno necesaria
+La aplicación necesita la siguiente variable de entorno configurada en AWS Amplify:
+
+```
+VITE_API_URL=https://URL-DE-LAMBDA-FUNCTION-URL
+```
+
+### 3. Flujo de la ruta `/activar`
+
+1. **Lectura del parámetro**: La ruta `/activar` lee el query parameter `danaparam` de la URL.
+2. **Validación**: Si no existe `danaparam`, muestra una pantalla de error amigable.
+3. **Consulta a Lambda**: Si existe `danaparam`, muestra un estado de carga y llama a la Lambda mediante:
+   ```
+   GET ${VITE_API_URL}?danaparam=${encodeURIComponent(danaparam)}
+   ```
+4. **Respuesta de Lambda**: La Lambda debe responder con un JSON que contiene:
+   - `ok`: true/false
+   - `message`: Mensaje descriptivo
+   - `advisorId`: ID real del asesor
+   - `micrositeUrl`: URL completa del microsite del asesor
+   - `advisor`: Objeto con datos del asesor (nombre, email, teléfono, etc.)
+5. **Landing de activación**: Si la respuesta es exitosa, muestra una landing con:
+   - Card del asesor con su información
+   - Botón "Ver mi microsite" (navega a `/asesor/{advisorId}`)
+   - Botón "Actualizar mis datos" (navega a `/asesor/{advisorId}/actualizar`)
+   - Botón "Descargar carnet digital" (muestra mensaje informativo)
+   - Bloque explicativo de funcionalidades del microsite
+
+### 4. Notas importantes
+
+- **Seguridad**: La app frontend solo conoce `VITE_API_URL`. Las credenciales de DANAconnect (`DANA_CLIENT_ID`, `DANA_CLIENT_SECRET`) deben estar solo en la Lambda.
+- **Identificadores**: El `danaparam` NO es el AdvisorId, NO es cédula, NO es código del asesor. Es el identificador interno que usa DANAconnect.
+- **URL de correo**: Usar formato `/activar?danaparam=$f{dana}` sin slash antes del query.
+- **Rutas existentes**: Las rutas existentes (`/asesor/:advisorId`, `/asesor/:advisorId/actualizar`) continúan funcionando normalmente.
+
+### 5. Ejemplo de uso
+
+Al entrar a:
+```
+https://main.d1w0srn8uz6n.amplifyapp.com/activar?danaparam=abc123
+```
+
+La app mostrará:
+1. Estado de carga mientras consulta a la Lambda
+2. Landing de activación con los datos del asesor
+3. Acciones para ver el microsite y actualizar datos

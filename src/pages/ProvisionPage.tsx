@@ -20,7 +20,7 @@ export default function ProvisionPage() {
       const result = await provisionMicrosite(danaparam);
       if (!result.ok) {
         setStatus('error');
-        setMessage(result.message);
+        setMessage(result.message || 'Error desconocido en la provisión');
         return;
       }
 
