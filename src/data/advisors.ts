@@ -1,9 +1,13 @@
+import tuSeguroLogo from '../assets/advisors/tuseguro-logo.svg';
+
 export type Advisor = {
   id: string;
   company: string;
   name: string;
   role: string;
   email: string;
+  website?: string;
+  contactUrl?: string;
   phone: string;
   whatsapp: string;
   city: string;
@@ -16,17 +20,19 @@ export type Advisor = {
 export const advisors: Advisor[] = [
   {
     id: 'laura-lepage',
-    company: 'Example Insurance',
-    name: 'Laura Lepage',
-    role: 'Asesora de Seguros',
-    email: 'lauralee@examplemail.com',
-    phone: '+1 (123) 456 789',
-    whatsapp: '1123456789',
-    city: 'Montreal',
-    advisorCode: 'PAS-1024',
-    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=640&q=80',
-    bio: 'Especialista en soluciones de protección personal, familiar y patrimonial.',
-    products: ['Seguro de Salud', 'Seguro de Vida', 'Seguro de Auto', 'Seguro de Hogar'],
+    company: 'Arroba Seguros Sociedad de Corretaje de Seguros, C.A.',
+    name: 'TuSeguro.com',
+    role: 'Asesores digitales expertos en seguros',
+    email: '',
+    website: 'tuseguro.com',
+    contactUrl: 'https://tuseguro.com/contactanos/',
+    phone: '+58 (212) 628.14.55',
+    whatsapp: '573209926066',
+    city: 'Caracas, Venezuela',
+    advisorCode: 'SUDEASEG S-69',
+    photoUrl: tuSeguroLogo,
+    bio: 'Compara opciones para proteger tu salud, automóvil, mascotas y viajes con el respaldo de especialistas de amplia trayectoria en Latinoamérica.',
+    products: ['Seguro de Salud', 'Seguro de Auto', 'Seguro de Vida', 'Seguro de Hogar'],
   },
   {
     id: 'carlos-mendoza',

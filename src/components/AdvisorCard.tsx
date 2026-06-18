@@ -1,4 +1,4 @@
-import { Download, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { Download, Globe2, MapPin, MessageCircle, Phone } from 'lucide-react';
 import type { Advisor } from '../data/advisors';
 import { downloadVCard } from '../utils/vcard';
 import logoWhite from '../assets/brand/Marca_example/logos/svg/example_insurance_white.svg';
@@ -9,6 +9,7 @@ type AdvisorCardProps = {
 
 export default function AdvisorCard({ advisor }: AdvisorCardProps) {
   const whatsappUrl = `https://wa.me/${advisor.whatsapp}?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20seguros`;
+  const isCompanyProfile = Boolean(advisor.website);
 
   return (
     <section id="inicio" className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:py-16">
@@ -46,13 +47,19 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
 
       <article className="rounded-[28px] bg-white p-5 shadow-soft ring-1 ring-white/70">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <img
-            src={advisor.photoUrl}
-            alt={advisor.name}
-            className="h-32 w-32 rounded-3xl object-cover shadow-lg"
-          />
+          <div className={`flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-3xl shadow-lg ${
+            isCompanyProfile ? 'bg-sky-50 p-3 ring-1 ring-sky-100' : ''
+          }`}>
+            <img
+              src={advisor.photoUrl}
+              alt={advisor.name}
+              className={isCompanyProfile ? 'w-full object-contain' : 'h-full w-full object-cover'}
+            />
+          </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-example-violet">Tu bienestar, nuestra prioridad</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-example-violet">
+              {isCompanyProfile ? 'Tu seguro, más simple' : 'Tu bienestar, nuestra prioridad'}
+            </p>
             <h2 className="mt-2 text-3xl font-extrabold text-dana-ink">{advisor.name}</h2>
             <p className="text-base font-semibold text-example-purple">{advisor.role}</p>
             <p className="mt-3 text-sm leading-6 text-dana-muted">{advisor.bio}</p>
@@ -60,9 +67,13 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Info icon={Phone} label="Telefono" value={advisor.phone} />
-          <Info icon={Mail} label="Email" value={advisor.email} />
+          {advisor.website ? (
+            <Info icon={Globe2} label="Sitio web" value={advisor.website} href={`https://${advisor.website}`} />
+          ) : (
+            <Info icon={Globe2} label="Email" value={advisor.email} />
+          )}
           <Info icon={MapPin} label="Ciudad" value={advisor.city} />
-          <Info icon={Download} label="Codigo" value={advisor.advisorCode} />
+          <Info icon={Download} label="Autorizacion" value={advisor.advisorCode} />
         </div>
       </article>
     </section>
@@ -73,16 +84,23 @@ type InfoProps = {
   icon: typeof Phone;
   label: string;
   value: string;
+  href?: string;
 };
 
-function Info({ icon: Icon, label, value }: InfoProps) {
+function Info({ icon: Icon, label, value, href }: InfoProps) {
   return (
     <div className="rounded-2xl bg-dana-cloud p-4">
       <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-dana-muted">
         <Icon size={15} />
         {label}
       </div>
-      <p className="break-words text-sm font-bold text-dana-ink">{value}</p>
+      {href ? (
+        <a href={href} target="_blank" rel="noreferrer" className="break-words text-sm font-bold text-example-violet hover:text-example-purple">
+          {value}
+        </a>
+      ) : (
+        <p className="break-words text-sm font-bold text-dana-ink">{value}</p>
+      )}
     </div>
   );
 }

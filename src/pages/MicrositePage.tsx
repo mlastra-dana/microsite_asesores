@@ -1,6 +1,4 @@
-import { useRef, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import AdvisorCard from '../components/AdvisorCard';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
@@ -8,79 +6,44 @@ import ProductCard from '../components/ProductCard';
 import { getAdvisorById } from '../data/advisors';
 import { products } from '../data/products';
 
-const ecosystemBullets = [
-  'Ordenar la información comercial.',
-  'Automatizar tareas repetitivas.',
-  'Facilitar el contacto con clientes.',
-  'Dar seguimiento a renovaciones, cobranzas y siniestros.',
-  'Centralizar el perfil digital del asesor.',
-  'Activar comunicaciones personalizadas desde una sola plataforma.',
-];
-
 export default function MicrositePage() {
   const { advisorId } = useParams();
-  const location = useLocation();
   const advisor = getAdvisorById(advisorId);
-  const quoteRef = useRef<HTMLElement>(null);
-  const [selectedProduct, setSelectedProduct] = useState(products[0].title);
 
-  function handleRequest(product: string) {
-    setSelectedProduct(product);
-    // Scroll to post-venta section when clicking on product "Cotizar" button
-    const postVentaSection = document.getElementById('postventa');
-    if (postVentaSection) {
-      postVentaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function openAdvisorContact(subject: string) {
+    if (advisor.contactUrl) {
+      window.open(advisor.contactUrl, '_blank', 'noopener,noreferrer');
+      return;
     }
+
+    window.open(`mailto:${advisor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`Hola ${advisor.name}, necesito ayuda con:`)}`);
   }
 
   return (
     <div className="min-h-screen bg-dana-cloud">
       <Header advisor={advisor} />
       <main>
-        <div className="bg-[radial-gradient(circle_at_16%_12%,rgba(167,121,255,0.34),transparent_28%),radial-gradient(circle_at_92%_10%,rgba(243,237,255,0.18),transparent_24%),linear-gradient(135deg,#0F0F1F_0%,#4B16B6_58%,#6D28E0_100%)]">
+        <div className="bg-[radial-gradient(circle_at_16%_12%,rgba(196,174,255,0.28),transparent_32%),radial-gradient(circle_at_92%_10%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(135deg,#29223F_0%,#5633A3_58%,#7650D4_100%)]">
           <AdvisorCard advisor={advisor} />
         </div>
-
-        <section className="bg-dana-cloud py-12">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="max-w-3xl">
-              <p className="text-sm font-extrabold uppercase tracking-wide text-example-violet">Ecosistema digital para corredores</p>
-              <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">
-                Un sistema simple para activar presencia digital y seguimiento comercial.
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-dana-muted">
-                Un ecosistema digital permite ordenar la información comercial, automatizar tareas repetitivas,
-                facilitar el contacto con clientes y dar seguimiento a renovaciones, cobranzas y siniestros.
-              </p>
-            </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ecosystemBullets.map((bullet) => (
-                <div key={bullet} className="flex items-start gap-3 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                  <CheckCircle2 className="mt-0.5 shrink-0 text-example-violet" size={20} />
-                  <p className="text-sm font-bold leading-6 text-dana-ink">{bullet}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         <section id="productos" className="bg-white py-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-sm font-extrabold uppercase tracking-wide text-example-violet">Catálogo</p>
-                <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">Productos disponibles</h2>
+                <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">Cotizadores disponibles</h2>
               </div>
             </div>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((product) => (
-                <ProductCard key={product.title} product={product} onRequest={handleRequest} />
+                <ProductCard key={product.title} product={product} />
               ))}
             </div>
           </div>
         </section>
 
-        <section id="postventa" ref={quoteRef} className="bg-gradient-to-br from-example-lavender via-white to-white py-12">
+        <section id="postventa" className="bg-gradient-to-br from-example-lavender via-white to-white py-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
               <p className="text-sm font-extrabold uppercase tracking-wide text-example-violet">Post-Venta</p>
@@ -101,7 +64,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Actualización de datos personales y contacto</p>
                 <button
                   type="button"
-                  onClick={() => window.open(`mailto:${advisor.email}?subject=Gestión del asegurado&body=Hola ${advisor.name}, necesito ayuda con:`)}
+                  onClick={() => openAdvisorContact('Gestión del asegurado')}
                   className="mt-4 w-full rounded-full bg-example-navy px-4 py-3 text-sm font-extrabold text-white transition hover:bg-example-violet"
                 >
                   Solicitar gestión
@@ -118,7 +81,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Solicitud y seguimiento de reembolsos</p>
                 <button
                   type="button"
-                  onClick={() => window.open(`mailto:${advisor.email}?subject=Gestión de reembolsos&body=Hola ${advisor.name}, necesito ayuda con:`)}
+                  onClick={() => openAdvisorContact('Gestión de reembolsos')}
                   className="mt-4 w-full rounded-full bg-example-navy px-4 py-3 text-sm font-extrabold text-white transition hover:bg-example-violet"
                 >
                   Solicitar reembolso
@@ -152,7 +115,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Modificaciones, actualizaciones y renovaciones</p>
                 <button
                   type="button"
-                  onClick={() => window.open(`mailto:${advisor.email}?subject=Cambios en mi póliza&body=Hola ${advisor.name}, necesito ayuda con:`)}
+                  onClick={() => openAdvisorContact('Cambios en mi póliza')}
                   className="mt-4 w-full rounded-full bg-example-navy px-4 py-3 text-sm font-extrabold text-white transition hover:bg-example-violet"
                 >
                   Solicitar cambio
@@ -163,7 +126,13 @@ export default function MicrositePage() {
             <div className="mt-8 text-center">
               <p className="text-sm text-dana-muted">
                 También puedes contactar directamente:{" "}
-                <a href={`mailto:${advisor.email}`} className="font-semibold text-example-violet hover:text-example-purple">{advisor.email}</a>{" "}
+                {advisor.contactUrl ? (
+                  <a href={advisor.contactUrl} target="_blank" rel="noreferrer" className="font-semibold text-example-violet hover:text-example-purple">
+                    {advisor.website ?? 'Formulario de contacto'}
+                  </a>
+                ) : (
+                  <a href={`mailto:${advisor.email}`} className="font-semibold text-example-violet hover:text-example-purple">{advisor.email}</a>
+                )}{" "}
                 o{" "}
                 <a href={`tel:${advisor.phone.replace(/\D/g, '')}`} className="font-semibold text-example-violet hover:text-example-purple">{advisor.phone}</a>
               </p>

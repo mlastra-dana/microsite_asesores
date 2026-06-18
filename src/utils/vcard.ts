@@ -8,7 +8,8 @@ export function downloadVCard(advisor: Advisor) {
     `ORG:${advisor.company}`,
     `TITLE:${advisor.role}`,
     `TEL:${advisor.phone}`,
-    `EMAIL:${advisor.email}`,
+    ...(advisor.email ? [`EMAIL:${advisor.email}`] : []),
+    ...(advisor.website ? [`URL:https://${advisor.website}`] : []),
     'END:VCARD',
   ].join('\n');
 
