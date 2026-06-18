@@ -8,7 +8,7 @@ export default function NotFoundPage() {
         <h1 className="mt-3 text-3xl font-extrabold text-dana-ink">Microsite no encontrado</h1>
         <p className="mt-3 text-dana-muted">Puedes volver al microsite principal de TuSeguro.com.</p>
         <Link
-          to="/asesor/tuseguro"
+          to="/asesor/2377"
           className="mt-6 inline-flex rounded-full bg-mercantil-blue px-5 py-3 text-sm font-extrabold text-white"
         >
           Ir al microsite demo

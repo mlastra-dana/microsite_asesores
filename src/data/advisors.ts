@@ -19,7 +19,7 @@ export type Advisor = {
 
 export const advisors: Advisor[] = [
   {
-    id: 'tuseguro',
+    id: '2377',
     company: 'Arroba Seguros Sociedad de Corretaje de Seguros, C.A.',
     name: 'TuSeguro.com',
     role: 'Asesores digitales expertos en seguros',

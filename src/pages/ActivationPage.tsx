@@ -50,7 +50,7 @@ export default function ActivationPage() {
   };
 
   const handleBackToDemo = () => {
-    navigate('/asesor/tuseguro');
+    navigate('/asesor/2377');
   };
 
   const handleBackToHome = () => {

@@ -15,10 +15,10 @@ npm run build
 ## Rutas demo
 
 - `/provisionar?danaparam=abc123-def456-ghi789`
-- `/asesor/tuseguro`
+- `/asesor/2377`
 - `/asesor/carlos-mendoza`
 - `/asesor/valentina-rojas`
-- `/asesor/tuseguro/actualizar`
+- `/asesor/2377/actualizar`
 
 Si el `advisorId` no existe, la app muestra los datos demo de TuSeguro.com.
 
