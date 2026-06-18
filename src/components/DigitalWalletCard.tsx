@@ -3,7 +3,7 @@ import { Apple, Smartphone } from 'lucide-react';
 import type { Advisor } from '../data/advisors';
 import { createQrSeed } from '../utils/qr';
 import { sendMicrositeEvent } from '../utils/api';
-import logoWhite from '../assets/brand/Marca_example/logos/svg/example_insurance_white.svg';
+import BrandLogo from './BrandLogo';
 
 type DigitalWalletCardProps = {
   advisor: Advisor;
@@ -37,11 +37,11 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
   return (
     <section className="bg-white py-12">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div className="rounded-[28px] bg-example-navy p-5 text-white shadow-soft">
+        <div className="rounded-[28px] bg-mercantil-navy p-5 text-white shadow-soft">
           <div className="rounded-[22px] border border-white/20 bg-white/10 p-5 backdrop-blur">
             <div className="flex items-center justify-between gap-4">
-              <img src={logoWhite} alt={advisor.company} className="h-11 w-auto max-w-[190px]" />
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-example-violet">{advisor.advisorCode}</span>
+              <BrandLogo inverse />
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-mercantil-blue">{advisor.advisorCode}</span>
             </div>
             <div className="mt-8 flex items-end gap-4">
               <img src={advisor.photoUrl} alt={advisor.name} className="h-24 w-24 rounded-2xl object-cover ring-4 ring-white/20" />
@@ -57,7 +57,7 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
               </div>
               <div className="grid h-28 w-28 grid-cols-7 gap-1 rounded-2xl bg-white p-3">
                 {cells.map((filled, index) => (
-                  <span key={index} className={filled ? 'rounded-[2px] bg-example-navy' : 'rounded-[2px] bg-white'} />
+                  <span key={index} className={filled ? 'rounded-[2px] bg-mercantil-navy' : 'rounded-[2px] bg-white'} />
                 ))}
               </div>
             </div>
@@ -65,7 +65,7 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
         </div>
 
         <div>
-          <p className="text-sm font-extrabold uppercase tracking-wide text-example-violet">Carnet digital inteligente</p>
+          <p className="text-sm font-extrabold uppercase tracking-wide text-mercantil-blue">Carnet digital inteligente</p>
           <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">
             Contacto, perfil profesional y acceso rápido desde el celular.
           </h2>
@@ -77,7 +77,7 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
             <button
               type="button"
               onClick={() => requestPass('apple')}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-example-navy px-5 py-3 text-sm font-extrabold text-white transition hover:bg-example-violet"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-mercantil-navy px-5 py-3 text-sm font-extrabold text-white transition hover:bg-mercantil-blue"
             >
               <Apple size={18} />
               Descargar pkpass
@@ -85,14 +85,14 @@ export default function DigitalWalletCard({ advisor, micrositeUrl }: DigitalWall
             <button
               type="button"
               onClick={() => requestPass('android')}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-example-violet px-5 py-3 text-sm font-extrabold text-example-violet transition hover:bg-example-lavender"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-mercantil-blue px-5 py-3 text-sm font-extrabold text-mercantil-blue transition hover:bg-mercantil-bluePale"
             >
               <Smartphone size={18} />
               Pase Android
             </button>
           </div>
           {walletStatus && (
-            <p className="mt-4 rounded-2xl bg-example-lavender px-4 py-3 text-sm font-bold text-example-violet">
+            <p className="mt-4 rounded-2xl bg-mercantil-bluePale px-4 py-3 text-sm font-bold text-mercantil-blue">
               {walletStatus}
             </p>
           )}

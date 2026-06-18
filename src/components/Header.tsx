@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Advisor } from '../data/advisors';
-import logoColor from '../assets/brand/Marca_example/logos/svg/example_insurance_color.svg';
+import BrandLogo from './BrandLogo';
 
 type HeaderProps = {
   advisor: Advisor;
@@ -8,25 +8,28 @@ type HeaderProps = {
 
 export default function Header({ advisor }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-example-lavender bg-white/92 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to={`/asesor/${advisor.id}`} className="flex items-center gap-3">
-          <img src={logoColor} alt={advisor.company} className="h-11 w-auto max-w-[178px]" />
-          <span>
-            <span className="block text-xs font-medium text-dana-muted">Asesor autorizado</span>
-          </span>
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3 sm:px-6">
+        <Link to={`/asesor/${advisor.id}`} aria-label="Inicio">
+          <BrandLogo showName={false} />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-dana-muted md:flex">
-          <a href="#inicio" className="hover:text-example-violet">Inicio</a>
-          <a href="#productos" className="hover:text-example-violet">Productos</a>
-          <a href="#postventa" className="hover:text-example-violet">Post-Venta</a>
-          <Link to={`/asesor/${advisor.id}/actualizar`} className="text-example-violet hover:text-example-purple">
-            Actualizar datos
-          </Link>
-        </nav>
+        <div className="hidden flex-1 items-center justify-end gap-8 md:flex">
+          <nav className="flex items-center gap-7 text-sm font-semibold text-dana-muted">
+            <a href="#inicio" className="hover:text-mercantil-blue">Inicio</a>
+            <a href="#productos" className="hover:text-mercantil-blue">Productos</a>
+            <a href="#postventa" className="hover:text-mercantil-blue">Post-Venta</a>
+            <Link
+              to={`/asesor/${advisor.id}/actualizar`}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-mercantil-blue transition hover:bg-mercantil-bluePale"
+            >
+              Actualizar datos
+            </Link>
+          </nav>
+          <BrandLogo className="border-l border-slate-200 pl-7" />
+        </div>
         <Link
           to={`/asesor/${advisor.id}/actualizar`}
-          className="rounded-full bg-example-violet px-4 py-2 text-xs font-bold text-white shadow-sm md:hidden"
+          className="rounded-lg bg-mercantil-blue px-4 py-2 text-xs font-bold text-white shadow-sm md:hidden"
         >
           Actualizar
         </Link>

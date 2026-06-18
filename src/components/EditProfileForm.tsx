@@ -72,7 +72,7 @@ export default function EditProfileForm({ advisor }: EditProfileFormProps) {
           value={form.bio}
           onChange={(event) => setForm({ ...form, bio: event.target.value })}
           rows={4}
-          className="mt-2 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-example-violet focus:ring-4 focus:ring-example-violet/10"
+          className="mt-2 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
         />
       </label>
       <div className="mt-5">
@@ -86,7 +86,7 @@ export default function EditProfileForm({ advisor }: EditProfileFormProps) {
                 key={product.title}
                 onClick={() => toggleProduct(product.title)}
                 className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
-                  active ? 'border-example-violet bg-example-lavender text-example-violet' : 'border-slate-200 bg-white text-dana-muted'
+                  active ? 'border-mercantil-blue bg-mercantil-bluePale text-mercantil-blue' : 'border-slate-200 bg-white text-dana-muted'
                 }`}
               >
                 {product.title}
@@ -104,7 +104,7 @@ export default function EditProfileForm({ advisor }: EditProfileFormProps) {
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-example-violet px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-example-violet/20 transition hover:bg-example-purple disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-mercantil-blue px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-mercantil-blue/20 transition hover:bg-mercantil-blueDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         <Save size={18} />
         {status === 'loading' ? 'Enviando...' : 'Enviar actualización'}
@@ -129,7 +129,7 @@ function Field({ label, value, onChange, type = 'text', className = '' }: FieldP
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-example-violet focus:ring-4 focus:ring-example-violet/10"
+        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
       />
     </label>
   );

@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
 import EditProfileForm from '../components/EditProfileForm';
-import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { getAdvisorById } from '../data/advisors';
 
@@ -11,7 +10,7 @@ export default function AdvisorEditPage() {
   return (
     <div className="min-h-screen bg-dana-cloud">
       <Header advisor={advisor} />
-      <main className="bg-[radial-gradient(circle_at_12%_8%,rgba(167,121,255,0.32),transparent_26%),linear-gradient(135deg,#0F0F1F_0%,#4B16B6_58%,#6D28E0_100%)] px-4 py-12 sm:px-6">
+      <main className="bg-[radial-gradient(circle_at_12%_8%,rgba(0,159,218,0.24),transparent_28%),linear-gradient(135deg,#002B55_0%,#00478D_58%,#009FDA_100%)] px-4 py-12 sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <section className="text-white">
             <p className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold ring-1 ring-white/20 sm:inline-flex">
@@ -26,7 +25,7 @@ export default function AdvisorEditPage() {
             </p>
             <Link
               to={`/asesor/${advisor.id}`}
-              className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-example-violet shadow-soft"
+              className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-mercantil-blue shadow-soft"
             >
               Volver al microsite
             </Link>
@@ -34,7 +33,6 @@ export default function AdvisorEditPage() {
           <EditProfileForm advisor={advisor} />
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

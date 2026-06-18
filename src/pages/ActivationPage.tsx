@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Download, ExternalLink, User, Mail, Phone, Briefcase } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { provisionAdvisor, type ProvisionResponse } from '../utils/api';
 
 type ActivationState = 'loading' | 'no_param' | 'success' | 'error';
@@ -59,14 +60,10 @@ export default function ActivationPage() {
   // Estado: Sin parámetro danaparam
   if (state === 'no_param') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F3EDFF] via-white to-white">
-        <header className="bg-[#0F0F1F] px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#E6EDF5] via-white to-white">
+        <header className="bg-[#002B55] px-4 py-4">
           <div className="mx-auto max-w-6xl">
-            <img 
-              src="https://images.email-platform.com/venturestars/example_insurance_white.png" 
-              alt="Example Insurance" 
-              className="h-8"
-            />
+            <BrandLogo inverse />
           </div>
         </header>
         
@@ -86,7 +83,7 @@ export default function ActivationPage() {
             
             <button
               onClick={handleBackToDemo}
-              className="mt-6 w-full rounded-full bg-[#4B16B6] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#6D28E0]"
+              className="mt-6 w-full rounded-lg bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
             >
               Volver al microsite demo
             </button>
@@ -99,21 +96,17 @@ export default function ActivationPage() {
   // Estado: Loading
   if (state === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F3EDFF] via-white to-white">
-        <header className="bg-[#0F0F1F] px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#E6EDF5] via-white to-white">
+        <header className="bg-[#002B55] px-4 py-4">
           <div className="mx-auto max-w-6xl">
-            <img 
-              src="https://images.email-platform.com/venturestars/example_insurance_white.png" 
-              alt="Example Insurance" 
-              className="h-8"
-            />
+            <BrandLogo inverse />
           </div>
         </header>
         
         <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-12">
           <div className="w-full max-w-md rounded-[28px] bg-white p-8 text-center shadow-soft">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#F3EDFF]">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4B16B6] border-t-transparent"></div>
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#E6EDF5]">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#00478D] border-t-transparent"></div>
             </div>
             
             <h1 className="text-2xl font-extrabold text-[#111827]">
@@ -132,14 +125,10 @@ export default function ActivationPage() {
   // Estado: Error
   if (state === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F3EDFF] via-white to-white">
-        <header className="bg-[#0F0F1F] px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#E6EDF5] via-white to-white">
+        <header className="bg-[#002B55] px-4 py-4">
           <div className="mx-auto max-w-6xl">
-            <img 
-              src="https://images.email-platform.com/venturestars/example_insurance_white.png" 
-              alt="Example Insurance" 
-              className="h-8"
-            />
+            <BrandLogo inverse />
           </div>
         </header>
         
@@ -165,7 +154,7 @@ export default function ActivationPage() {
             
             <button
               onClick={handleBackToHome}
-              className="mt-6 w-full rounded-full bg-[#4B16B6] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#6D28E0]"
+              className="mt-6 w-full rounded-lg bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
             >
               Volver al inicio
             </button>
@@ -181,14 +170,10 @@ export default function ActivationPage() {
   const advisorId = provisionData?.advisorId;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F3EDFF] via-white to-white">
-      <header className="bg-[#0F0F1F] px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#E6EDF5] via-white to-white">
+      <header className="bg-[#002B55] px-4 py-4">
         <div className="mx-auto max-w-6xl">
-          <img 
-            src="https://images.email-platform.com/venturestars/example_insurance_white.png" 
-            alt="Example Insurance" 
-            className="h-8"
-          />
+          <BrandLogo inverse />
         </div>
       </header>
       
@@ -216,7 +201,7 @@ export default function ActivationPage() {
           </h1>
           
           <p className="mt-3 text-lg text-[#6B7280]">
-            Generamos tu microsite personalizado y tu carnet digital como asesor de Example Insurance.
+            Generamos tu microsite personalizado y tu carnet digital como asesor de Mercantil Seguros.
           </p>
         </div>
 
@@ -252,28 +237,28 @@ export default function ActivationPage() {
               <div className="space-y-3">
                 {advisor?.email && (
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[#4B16B6]" />
+                    <Mail className="h-4 w-4 text-[#00478D]" />
                     <span className="text-sm text-[#6B7280]">{advisor.email}</span>
                   </div>
                 )}
 
                 {advisor?.phone && (
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-[#4B16B6]" />
+                    <Phone className="h-4 w-4 text-[#00478D]" />
                     <span className="text-sm text-[#6B7280]">{advisor.phone}</span>
                   </div>
                 )}
 
                 {advisor?.advisorCode && (
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-[#4B16B6]" />
+                    <User className="h-4 w-4 text-[#00478D]" />
                     <span className="text-sm text-[#6B7280]">Código: {advisor.advisorCode}</span>
                   </div>
                 )}
 
                 {advisor?.city && (
                   <div className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-[#4B16B6]" />
+                    <Briefcase className="h-4 w-4 text-[#00478D]" />
                     <span className="text-sm text-[#6B7280]">{advisor.city}</span>
                   </div>
                 )}
@@ -289,7 +274,7 @@ export default function ActivationPage() {
               <div className="space-y-4">
                 <Link
                   to={micrositeUrl?.replace(window.location.origin, '') || `/asesor/${advisorId}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#4B16B6] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#6D28E0]"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Ver mi microsite
@@ -298,7 +283,7 @@ export default function ActivationPage() {
                 {advisorId && (
                   <Link
                     to={`/asesor/${advisorId}/actualizar`}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border border-[#4B16B6] px-5 py-3 text-sm font-extrabold text-[#4B16B6] transition hover:bg-[#4B16B6] hover:text-white"
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-[#00478D] px-5 py-3 text-sm font-extrabold text-[#00478D] transition hover:bg-[#00478D] hover:text-white"
                   >
                     <User className="h-4 w-4" />
                     Actualizar mis datos
@@ -307,7 +292,7 @@ export default function ActivationPage() {
 
                 <button
                   onClick={handleDownloadCard}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#F3EDFF] px-5 py-3 text-sm font-extrabold text-[#4B16B6] transition hover:bg-[#E5E7EB]"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#E6EDF5] px-5 py-3 text-sm font-extrabold text-[#00478D] transition hover:bg-[#E5E7EB]"
                 >
                   <Download className="h-4 w-4" />
                   Descargar carnet digital
@@ -321,23 +306,23 @@ export default function ActivationPage() {
               
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#4B16B6]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
                   <span className="text-sm text-[#6B7280]">Compartir tu perfil profesional con clientes.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#4B16B6]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
                   <span className="text-sm text-[#6B7280]">Facilitar el contacto por WhatsApp.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#4B16B6]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
                   <span className="text-sm text-[#6B7280]">Recibir solicitudes de cotización.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#4B16B6]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
                   <span className="text-sm text-[#6B7280]">Revisar y actualizar tus datos.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#4B16B6]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
                   <span className="text-sm text-[#6B7280]">Activar tu carnet digital para compartir tu perfil rápidamente.</span>
                 </li>
               </ul>

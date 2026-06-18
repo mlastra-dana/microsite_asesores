@@ -78,7 +78,7 @@ export default function QuoteForm({ advisor, selectedProduct }: QuoteFormProps) 
           <select
             value={form.product}
             onChange={(event) => setForm({ ...form, product: event.target.value })}
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-example-violet focus:ring-4 focus:ring-example-violet/10"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
           >
             {products.map((product) => (
               <option key={product.title} value={product.title}>{product.title}</option>
@@ -93,7 +93,7 @@ export default function QuoteForm({ advisor, selectedProduct }: QuoteFormProps) 
           onChange={(event) => setForm({ ...form, message: event.target.value })}
           rows={4}
           placeholder="Cuéntanos qué cobertura necesitas."
-          className="mt-2 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-example-violet focus:ring-4 focus:ring-example-violet/10"
+          className="mt-2 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
         />
       </label>
       {feedback && (
@@ -104,7 +104,7 @@ export default function QuoteForm({ advisor, selectedProduct }: QuoteFormProps) 
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-example-violet px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-example-violet/20 transition hover:bg-example-purple disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-mercantil-blue px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-mercantil-blue/20 transition hover:bg-mercantil-blueDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         <Send size={18} />
         {status === 'loading' ? 'Enviando...' : 'Solicitar cotización'}
@@ -130,7 +130,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: FieldProp
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-example-violet focus:ring-4 focus:ring-example-violet/10"
+        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
       />
     </label>
   );

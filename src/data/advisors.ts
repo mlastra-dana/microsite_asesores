@@ -36,7 +36,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: 'carlos-mendoza',
-    company: 'Example Insurance',
+    company: 'Mercantil Seguros',
     name: 'Carlos Mendoza',
     role: 'Asesor Patrimonial',
     email: 'carlos.mendoza@examplemail.com',
@@ -50,7 +50,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: 'valentina-rojas',
-    company: 'Example Insurance',
+    company: 'Mercantil Seguros',
     name: 'Valentina Rojas',
     role: 'Consultora de Seguros',
     email: 'valentina.rojas@examplemail.com',

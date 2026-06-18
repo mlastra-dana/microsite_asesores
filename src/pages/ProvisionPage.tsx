@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import logoColor from '../assets/brand/Marca_example/logos/svg/example_insurance_color.svg';
+import BrandLogo from '../components/BrandLogo';
 import { provisionMicrosite } from '../utils/api';
 
 export default function ProvisionPage() {
@@ -38,22 +38,22 @@ export default function ProvisionPage() {
   }, [danaparam]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-example-lavender px-4">
+    <main className="flex min-h-screen items-center justify-center bg-mercantil-bluePale px-4">
       <section className="w-full max-w-md rounded-[28px] bg-white p-8 text-center shadow-soft">
-        <img src={logoColor} alt="Example Insurance" className="mx-auto h-14 w-auto" />
-        <div className="mx-auto mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-example-lavender">
+        <BrandLogo />
+        <div className="mx-auto mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-mercantil-bluePale">
           {status === 'loading' ? (
-            <span className="h-7 w-7 animate-spin rounded-full border-4 border-example-lilac border-t-example-violet" />
+            <span className="h-7 w-7 animate-spin rounded-full border-4 border-mercantil-sky border-t-mercantil-blue" />
           ) : (
-            <span className="text-2xl font-extrabold text-example-violet">{status === 'success' ? '✓' : '!'}</span>
+            <span className="text-2xl font-extrabold text-mercantil-blue">{status === 'success' ? '✓' : '!'}</span>
           )}
         </div>
-        <h1 className="mt-6 text-2xl font-extrabold text-example-navy">Microsite personalizado</h1>
+        <h1 className="mt-6 text-2xl font-extrabold text-mercantil-navy">Microsite personalizado</h1>
         <p className="mt-3 text-sm leading-6 text-dana-muted">{message}</p>
         {status === 'error' && (
           <Link
             to="/asesor/laura-lepage"
-            className="mt-6 inline-flex rounded-full bg-example-violet px-5 py-3 text-sm font-extrabold text-white"
+            className="mt-6 inline-flex rounded-full bg-mercantil-blue px-5 py-3 text-sm font-extrabold text-white"
           >
             Ver demo
           </Link>
