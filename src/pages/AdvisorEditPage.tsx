@@ -19,13 +19,9 @@ export default function AdvisorEditPage() {
             <h1 className="mt-5 text-4xl font-extrabold leading-tight sm:text-5xl">
               Actualiza los datos de tu microsite.
             </h1>
-            <p className="mt-4 text-lg leading-8 text-white/86">
-              Para esta demo no hay login. El asesor puede revisar su información y enviar una solicitud de
-              actualización para validación de la aseguradora.
-            </p>
             <Link
               to={`/asesor/${advisor.id}`}
-              className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-mercantil-blue shadow-soft"
+              className="mt-8 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-mercantil-blue shadow-soft"
             >
               Volver al microsite
             </Link>
