@@ -16,7 +16,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         href={product.url}
         target="_blank"
         rel="noreferrer"
-        className="mt-5 rounded-lg bg-mercantil-blue px-5 py-3 text-center text-sm font-extrabold text-white transition hover:bg-mercantil-blueDark"
+        className="mt-5 rounded-lg bg-[#00478D] px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
       >
         Cotizar
       </a>

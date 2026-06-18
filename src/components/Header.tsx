@@ -20,7 +20,7 @@ export default function Header({ advisor }: HeaderProps) {
             <a href="#postventa" className="hover:text-mercantil-blue">Post-Venta</a>
             <Link
               to={`/asesor/${advisor.id}/actualizar`}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-mercantil-blue transition hover:bg-mercantil-bluePale"
+              className="rounded-lg bg-[#00478D] px-4 py-2 text-white shadow-sm transition hover:bg-[#00376E]"
             >
               Actualizar datos
             </Link>
@@ -29,7 +29,7 @@ export default function Header({ advisor }: HeaderProps) {
         </div>
         <Link
           to={`/asesor/${advisor.id}/actualizar`}
-          className="rounded-lg bg-mercantil-blue px-4 py-2 text-xs font-bold text-white shadow-sm md:hidden"
+          className="rounded-lg bg-[#00478D] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00376E] md:hidden"
         >
           Actualizar
         </Link>

@@ -11,15 +11,15 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
   const isCompanyProfile = Boolean(advisor.website);
 
   return (
-    <section id="inicio" className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:py-16">
+    <section id="inicio" className="mx-auto grid min-h-[620px] max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:py-20">
       <div className="text-dana-ink">
-        <p className="mb-5 text-lg font-medium text-mercantil-blue">
+        <p className="mb-5 text-base font-semibold text-mercantil-blue">
           Asesor digital autorizado
         </p>
-        <h1 className="max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+        <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-[#101828] sm:text-5xl lg:text-[56px]">
           Tu asesor de seguros, siempre disponible
         </h1>
-        <p className="mt-5 max-w-2xl text-lg text-dana-muted">
+        <p className="mt-6 max-w-xl text-lg leading-8 text-[#344054]">
           Un microsite personalizado para centralizar contacto, productos, cotizaciones y perfil profesional del corredor.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -27,7 +27,7 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-mercantil-blue px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-mercantil-blueDark"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#00478D] px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
           >
             <MessageCircle size={19} />
             Escríbeme por WhatsApp
@@ -35,7 +35,7 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
           <button
             type="button"
             onClick={() => downloadVCard(advisor)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#5488BC] bg-white px-6 py-3 text-sm font-extrabold text-mercantil-blueDark transition hover:bg-mercantil-bluePale"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#00478D] px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
           >
             <Download size={19} />
             Descargar mi contacto
@@ -43,10 +43,10 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
         </div>
       </div>
 
-      <article className="relative rounded-2xl border-t-8 border-mercantil-blue bg-white p-5 shadow-soft ring-1 ring-slate-200">
+      <article className="relative rounded-2xl border border-[#D0D5DD] bg-white p-6 shadow-soft">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className={`flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-md ${
-            isCompanyProfile ? 'bg-[#F4F7FB] p-3 ring-1 ring-[#E6EDF5]' : ''
+          <div className={`flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl ${
+            isCompanyProfile ? 'bg-white p-3 ring-1 ring-[#EAECF0]' : ''
           }`}>
             <img
               src={advisor.photoUrl}
@@ -87,7 +87,7 @@ type InfoProps = {
 
 function Info({ icon: Icon, label, value, href }: InfoProps) {
   return (
-    <div className="rounded-xl bg-dana-cloud p-4 ring-1 ring-[#E6EDF5]">
+    <div className="rounded-xl bg-[#F9FAFB] p-4 ring-1 ring-[#EAECF0]">
       <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-dana-muted">
         <Icon size={15} />
         {label}
