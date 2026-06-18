@@ -50,7 +50,7 @@ export default function ActivationPage() {
   };
 
   const handleBackToDemo = () => {
-    navigate('/asesor/laura-lepage');
+    navigate('/asesor/tuseguro');
   };
 
   const handleBackToHome = () => {

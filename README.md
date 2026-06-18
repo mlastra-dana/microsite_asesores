@@ -15,12 +15,12 @@ npm run build
 ## Rutas demo
 
 - `/provisionar?danaparam=abc123-def456-ghi789`
-- `/asesor/laura-lepage`
+- `/asesor/tuseguro`
 - `/asesor/carlos-mendoza`
 - `/asesor/valentina-rojas`
-- `/asesor/laura-lepage/actualizar`
+- `/asesor/tuseguro/actualizar`
 
-Si el `advisorId` no existe, la app muestra los datos demo de Laura Lepage.
+Si el `advisorId` no existe, la app muestra los datos demo de TuSeguro.com.
 
 La ruta `/provisionar` es la URL inicial para usar desde DANAconnect. Recibe `danaparam`, llama la Lambda y redirige al microsite limpio que devuelve el backend.
 

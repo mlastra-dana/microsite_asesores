@@ -52,7 +52,7 @@ export default function ProvisionPage() {
         <p className="mt-3 text-sm leading-6 text-dana-muted">{message}</p>
         {status === 'error' && (
           <Link
-            to="/asesor/laura-lepage"
+            to="/asesor/tuseguro"
             className="mt-6 inline-flex rounded-full bg-mercantil-blue px-5 py-3 text-sm font-extrabold text-white"
           >
             Ver demo
