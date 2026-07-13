@@ -12,9 +12,21 @@ export type Product = {
   description: string;
   logoUrl: string;
   url: string;
+  badge?: string;
+  ctaLabel?: string;
+  featured?: boolean;
 };
 
 export const products: Product[] = [
+  {
+    title: 'Cotizador Simplificado',
+    description: 'Nueva experiencia piloto para generar una cotización rápida de todos los planes disponibles a la vez. Inicia con Salud Panamá.',
+    logoUrl: saludLogo,
+    url: 'https://link.mercantilseguros.com/CotizadorMS_ADS_2377',
+    badge: 'Nueva experiencia',
+    ctaLabel: 'Probar ahora',
+    featured: true,
+  },
   {
     title: 'Vitales',
     description: 'Protección para cuidar tu bienestar y el de quienes más importan.',
