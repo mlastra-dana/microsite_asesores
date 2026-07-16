@@ -1,6 +1,6 @@
 # Lambda para microsites de asesores
 
-Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de DANAconnect y responde con JSON. No usa dependencias externas adicionales; `boto3` ya viene disponible en AWS Lambda para DynamoDB.
+Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de DANAconnect y responde con JSON. Para el microsite, DANAconnect es la fuente principal de datos del asesor.
 
 ## Crear la Lambda
 
@@ -41,19 +41,27 @@ Recomendadas:
 
 ```bash
 DANA_BASE_URL=https://appserv.danaconnect.com
-DANA_DATA_FIELDS=EMAIL,NAME,PHONE_NUMBER,WHATSAPP,CITY,ADVISOR_CODE,ROLE,PHOTO_URL,BIO,PRODUCTS
-DANA_FIELDS_QUERY_PARAM=fields
+DANA_DATA_FIELDS=ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA
+DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 CORS_ORIGIN=*
 ```
 
-Opcional para guardar en DynamoDB:
+El CSV de prueba para cargar en DANA esta en:
+
+`docs/dana-microsite-asesores-demo.csv`
+
+`ADVISORID` es el identificador interno del asesor. `MICROSITEID` es el identificador opaco que se usa en el enlace publico.
+
+Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que verá cada asesor.
+
+Opcional para guardar eventos del microsite, como cotizaciones o actualizaciones:
 
 ```bash
-DYNAMODB_TABLE=MicrositeAdvisors
+DYNAMODB_TABLE=MicrositeEvents
 ```
 
-Si `DYNAMODB_TABLE` no existe, la Lambda imprime el registro o evento en CloudWatch Logs y sigue respondiendo correctamente.
+Si `DYNAMODB_TABLE` no existe, la Lambda imprime los eventos en CloudWatch Logs y sigue respondiendo correctamente. No se requiere DynamoDB para consultar asesores.
 
 ## Data Retrieval API usada
 
@@ -106,6 +114,40 @@ Respuesta esperada:
 }
 ```
 
+## Consultar un asesor por URL limpia
+
+Cuando el frontend abre una URL como:
+
+```bash
+https://tudominio.com/asesor/9F3806A23CEA5138
+```
+
+puede pedir los datos actuales a la Lambda:
+
+```bash
+curl -i "https://xxxxx.lambda-url.region.on.aws/?advisorId=9F3806A23CEA5138"
+```
+
+La Lambda resuelve ese identificador contra DANAconnect y devuelve:
+
+```json
+{
+  "ok": true,
+  "type": "get_advisor",
+  "advisorId": "9F3806A23CEA5138",
+  "micrositeUrl": "https://tudominio.com/asesor/9F3806A23CEA5138",
+  "advisor": {
+    "advisorId": "9F3806A23CEA5138",
+    "internalAdvisorId": "24657722",
+    "name": "Maria Lastra",
+    "email": "mlastra@danaconnect.com",
+    "phone": "04142563325",
+    "advisorCode": "2897878",
+    "products": ["Cotizador Simplificado", "Vitales", "Auto", "Salud"]
+  }
+}
+```
+
 ## Conectar con Amplify
 
 En AWS Amplify, agrega una variable de entorno:
@@ -134,9 +176,8 @@ Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda
 
 El backend definitivo se mantiene en Python. La Lambda puede evolucionar para:
 
-- Consultar la Data Retrieval API o DANAconnect y traer el registro del asesor.
-- Generar un slug limpio y una URL canonica.
-- Guardar los datos en DynamoDB.
+- Consultar DANAconnect y traer el registro del asesor.
+- Resolver una URL canonica por asesor.
 - Crear o solicitar archivos `.pkpass` para Apple Wallet.
 - Crear un pase compatible con Android Wallet.
 - Generar y validar OTP para el acceso del asesor.
@@ -151,7 +192,7 @@ Minimo para demo conectada a DANAconnect:
 - CloudWatch Logs.
 - Variables de entorno de DANAconnect.
 
-Para version con persistencia:
+Para version con persistencia de eventos:
 
 - DynamoDB table, por ejemplo `MicrositeAdvisors`.
 - IAM role de Lambda con permisos:

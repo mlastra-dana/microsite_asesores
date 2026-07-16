@@ -71,7 +71,6 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
             <Info icon={Globe2} label="Email" value={advisor.email} />
           )}
           <Info icon={MapPin} label="Ciudad" value={advisor.city} />
-          <Info icon={Download} label="Autorizacion" value={advisor.advisorCode} />
         </div>
       </article>
     </section>

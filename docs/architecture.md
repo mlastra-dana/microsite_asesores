@@ -6,12 +6,13 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 
 1. La app en Amplify recibe una visita a una URL inicial del asesor.
 2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API de DANAconnect para traer el registro del asesor desde la lista de contactos usando `danaparam`.
-3. La Lambda normaliza los datos, genera un slug limpio y guarda el registro en DynamoDB.
+3. La Lambda normaliza los datos y genera o resuelve una URL limpia por asesor.
 4. El usuario queda redirigido o resuelto hacia una URL limpia, por ejemplo `/asesor/2377`.
-5. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
-6. Para Apple se contempla generar `.pkpass`.
-7. Para Android se contempla un pase compatible con wallet.
-8. El asesor puede entrar a su espacio de actualizacion con OTP, sin depender de un clic de correo ni de un token permanente.
+5. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda y la Lambda trae los datos vigentes desde DANAconnect.
+6. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
+7. Para Apple se contempla generar `.pkpass`.
+8. Para Android se contempla un pase compatible con wallet.
+9. El asesor puede entrar a su espacio de actualizacion con OTP, sin depender de un clic de correo ni de un token permanente.
 
 ## Backend
 
@@ -19,25 +20,57 @@ El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/in
 
 Eventos previstos:
 
-- `landing_provision`: trae el registro desde Data Retrieval API/DANAconnect, crea slug y guarda en DynamoDB.
+- `landing_provision`: trae el registro desde Data Retrieval API/DANAconnect y devuelve la URL limpia del asesor.
+- `get_advisor`: trae el registro actualizado del asesor desde DANAconnect usando el identificador de la URL.
 - `pass_request`: genera o solicita el pass de Apple/Android.
 - `otp_request`: genera un OTP para el asesor.
 - `otp_verify`: valida el OTP antes de permitir cambios.
 - `quote_request`: recibe solicitudes de cotizacion.
 - `advisor_update`: recibe propuestas de actualizacion de datos.
 
-## Persistencia
+## Fuente de datos
 
-DynamoDB seria la base para guardar:
+DANAconnect es la fuente principal para los datos del asesor. La lista de contactos `Microsite_asesores` debe tener, al menos estos codes:
 
-- Registro normalizado del asesor.
-- Slug limpio.
-- URL canonica del microsite.
-- Estado de provisionamiento.
+- `ADVISORID`: identificador interno del asesor.
+- `MICROSITEID`: identificador opaco usado en la URL publica.
+- `NOMBREASESOR`
+- `EMAILASESOR`
+- `TELEFONOASESOR`
+- `CODIGOASESOR`
+- `FOTOASESOR`
+- `MICROSITEURL`
+
+Campos opcionales recomendados para enriquecer la experiencia:
+
+- `CIUDADASESOR`
+- `BIOASESOR`
+- `WEBSITEASESOR`
+- `CONTACTOASESOR`
+
+Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
+
+- `COTIZADOR_SIMPLIFICADO`
+- `COTIZADOR_VITALES`
+- `COTIZADOR_AUTO`
+- `COTIZADOR_SALUD`
+- `COTIZADOR_EMERGENCIAS_MEDICAS`
+- `COTIZADOR_PLATINO`
+- `COTIZADOR_TRAVEL`
+- `COTIZADOR_CR`
+- `COTIZADOR_SALUD_PANAMA`
+
+El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
+
+## Persistencia opcional
+
+DynamoDB puede usarse como cache o para guardar actividad, pero no es requisito para resolver el microsite. Sus usos opcionales serian:
+
 - Solicitudes de cotizacion.
 - Solicitudes de actualizacion.
 - OTP temporal con expiracion.
 - Historial de generacion de pases wallet.
+- Cache temporal del registro normalizado del asesor, si se quisiera reducir llamadas a DANAconnect.
 
 ## Importante
 

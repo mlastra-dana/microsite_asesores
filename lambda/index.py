@@ -22,13 +22,16 @@ CORS_HEADERS = {
 }
 
 DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "https://auth.danaconnect.com/oauth2/token")
+DANA_ACCESS_TOKEN = os.environ.get("DANA_ACCESS_TOKEN", "")
 DANA_CLIENT_ID = os.environ.get("DANA_CLIENT_ID", "")
 DANA_CLIENT_SECRET = os.environ.get("DANA_CLIENT_SECRET", "")
+DANA_OAUTH_SCOPE = os.environ.get("DANA_OAUTH_SCOPE", "")
+DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
 
 DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
-    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR",
+    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
 )
 
 DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
@@ -86,6 +89,9 @@ def validate_required(payload, fields):
 
 
 def get_oauth_token():
+    if DANA_ACCESS_TOKEN:
+        return DANA_ACCESS_TOKEN
+
     now = int(time.time())
 
     if TOKEN_CACHE["access_token"] and TOKEN_CACHE["expires_at"] > now + 60:
@@ -97,21 +103,32 @@ def get_oauth_token():
     if not DANA_CLIENT_SECRET:
         raise ValueError("Falta variable de entorno DANA_CLIENT_SECRET")
 
-    form_data = urllib.parse.urlencode({
+    form_payload = {
         "grant_type": "client_credentials"
-    }).encode("utf-8")
+    }
 
-    credentials = f"{DANA_CLIENT_ID}:{DANA_CLIENT_SECRET}"
-    basic_auth = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
+    if DANA_OAUTH_SCOPE:
+        form_payload["scope"] = DANA_OAUTH_SCOPE
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+    }
+
+    if DANA_OAUTH_AUTH_METHOD == "body":
+        form_payload["client_id"] = DANA_CLIENT_ID
+        form_payload["client_secret"] = DANA_CLIENT_SECRET
+    else:
+        credentials = f"{DANA_CLIENT_ID}:{DANA_CLIENT_SECRET}"
+        basic_auth = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
+        headers["Authorization"] = f"Basic {basic_auth}"
+
+    form_data = urllib.parse.urlencode(form_payload).encode("utf-8")
 
     request = urllib.request.Request(
         DANA_TOKEN_URL,
         data=form_data,
-        headers={
-            "Authorization": f"Basic {basic_auth}",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-        },
+        headers=headers,
         method="POST",
     )
 
@@ -144,8 +161,8 @@ def get_oauth_token():
     return access_token
 
 
-def dana_data_url(danaparam):
-    encoded_param = urllib.parse.quote(str(danaparam), safe="")
+def dana_data_url(identifier):
+    encoded_param = urllib.parse.quote(str(identifier), safe="")
     query = urllib.parse.urlencode({
         DANA_FIELDS_QUERY_PARAM: DANA_DATA_FIELDS
     })
@@ -153,9 +170,9 @@ def dana_data_url(danaparam):
     return f"{DANA_BASE_URL.rstrip('/')}/api/2.0/rest/conversation/data/{encoded_param}?{query}"
 
 
-def fetch_dana_contact(danaparam):
+def fetch_dana_contact(identifier):
     access_token = get_oauth_token()
-    url = dana_data_url(danaparam)
+    url = dana_data_url(identifier)
 
     print("Consultando DANAconnect URL:", url)
 
@@ -199,45 +216,89 @@ def first_value(*values, default=""):
     return default
 
 
+def get_case_insensitive(data, key):
+    if not isinstance(data, dict):
+        return None
+
+    key_lower = key.lower()
+
+    for current_key, value in data.items():
+        if str(current_key).lower() == key_lower:
+            return value
+
+    return None
+
+
 def extract_field(data, code):
     if not isinstance(data, dict):
         return ""
 
     candidates = []
 
-    candidates.append(data.get(code))
-    candidates.append(data.get(code.upper()))
-    candidates.append(data.get(code.lower()))
+    candidates.append(get_case_insensitive(data, code))
 
     record = data.get("record")
     if isinstance(record, dict):
-        candidates.append(record.get(code))
-        candidates.append(record.get(code.upper()))
-        candidates.append(record.get(code.lower()))
+        candidates.append(get_case_insensitive(record, code))
 
     fields = data.get("fields")
     if isinstance(fields, dict):
-        candidates.append(fields.get(code))
-        candidates.append(fields.get(code.upper()))
-        candidates.append(fields.get(code.lower()))
+        candidates.append(get_case_insensitive(fields, code))
 
     contact = data.get("contact")
     if isinstance(contact, dict):
-        candidates.append(contact.get(code))
-        candidates.append(contact.get(code.upper()))
-        candidates.append(contact.get(code.lower()))
+        candidates.append(get_case_insensitive(contact, code))
 
     data_fields = data.get("data")
     if isinstance(data_fields, dict):
-        candidates.append(data_fields.get(code))
-        candidates.append(data_fields.get(code.upper()))
-        candidates.append(data_fields.get(code.lower()))
+        candidates.append(get_case_insensitive(data_fields, code))
 
     for value in candidates:
         if value not in (None, ""):
             return value
 
     return ""
+
+
+def split_products(value):
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+
+    if not value:
+        return []
+
+    return [
+        item.strip()
+        for item in re.split(r"[,;|]", str(value))
+        if item.strip()
+    ]
+
+
+PRODUCT_FLAG_FIELDS = [
+    ("COTIZADOR_SIMPLIFICADO", "Cotizador Simplificado"),
+    ("COTIZADOR_VITALES", "Vitales"),
+    ("COTIZADOR_AUTO", "Auto"),
+    ("COTIZADOR_SALUD", "Salud"),
+    ("COTIZADOR_EMERGENCIAS_MEDICAS", "Emergencias Médicas"),
+    ("COTIZADOR_PLATINO", "Platino"),
+    ("COTIZADOR_TRAVEL", "Travel"),
+    ("COTIZADOR_CR", "C.R."),
+    ("COTIZADOR_SALUD_PANAMA", "Salud Panamá"),
+]
+
+
+def is_enabled(value):
+    return str(value or "").strip().upper() in ("SI", "SÍ", "YES", "TRUE", "1", "Y")
+
+
+def products_from_flags(data):
+    enabled_products = []
+
+    for field_code, product_title in PRODUCT_FLAG_FIELDS:
+        if is_enabled(extract_field(data, field_code)):
+            enabled_products.append(product_title)
+
+    return enabled_products
 
 
 def normalize_dana_response(data):
@@ -247,32 +308,107 @@ def normalize_dana_response(data):
     if not isinstance(data, dict):
         data = {}
 
-    advisor_id = extract_field(data, "ADVISORID")
-    name = extract_field(data, "NOMBREASESOR")
-    email = extract_field(data, "EMAILASESOR")
-    phone = extract_field(data, "TELEFONOASESOR")
-    advisor_code = extract_field(data, "CODIGOASESOR")
-    photo_url = extract_field(data, "FOTOASESOR")
+    advisor_id = first_value(
+        extract_field(data, "AdvisorId"),
+        extract_field(data, "ADVISORID"),
+        extract_field(data, "advisorId"),
+        extract_field(data, "id"),
+    )
+    microsite_id = first_value(
+        extract_field(data, "MICROSITEID"),
+        extract_field(data, "MicrositeId"),
+        extract_field(data, "micrositeId"),
+    )
+    name = first_value(
+        extract_field(data, "NombreAsesor"),
+        extract_field(data, "NOMBREASESOR"),
+        extract_field(data, "NAME"),
+        extract_field(data, "name"),
+    )
+    email = first_value(
+        extract_field(data, "EmailAsesor"),
+        extract_field(data, "EMAILASESOR"),
+        extract_field(data, "EMAIL"),
+        extract_field(data, "email"),
+    )
+    phone = first_value(
+        extract_field(data, "TelefonoAsesor"),
+        extract_field(data, "TELEFONOASESOR"),
+        extract_field(data, "PHONE_NUMBER"),
+        extract_field(data, "phone"),
+    )
+    whatsapp = phone
+    city = first_value(
+        extract_field(data, "CiudadAsesor"),
+        extract_field(data, "CIUDADASESOR"),
+        extract_field(data, "CITY"),
+        extract_field(data, "city"),
+    )
+    advisor_code = first_value(
+        extract_field(data, "CodigoAsesor"),
+        extract_field(data, "CODIGOASESOR"),
+        extract_field(data, "ADVISOR_CODE"),
+        extract_field(data, "advisorCode"),
+    )
+    role = "Asesor de Seguros"
+    photo_url = first_value(
+        extract_field(data, "FotoAsesor"),
+        extract_field(data, "FOTOASESOR"),
+        extract_field(data, "PHOTO_URL"),
+        extract_field(data, "photoUrl"),
+    )
+    bio = first_value(
+        extract_field(data, "BioAsesor"),
+        extract_field(data, "BIOASESOR"),
+        extract_field(data, "BIO"),
+        extract_field(data, "bio"),
+        default="Especialista en soluciones de protección personal, familiar y patrimonial.",
+    )
+    website = first_value(
+        extract_field(data, "WebsiteAsesor"),
+        extract_field(data, "WEBSITEASESOR"),
+        extract_field(data, "WEBSITE"),
+        extract_field(data, "website"),
+    )
+    contact_url = first_value(
+        extract_field(data, "ContactoAsesor"),
+        extract_field(data, "CONTACTOASESOR"),
+        extract_field(data, "CONTACT_URL"),
+        extract_field(data, "contactUrl"),
+    )
+    products = products_from_flags(data)
+
+    if not products:
+        products = split_products(first_value(
+        extract_field(data, "ProductosAsesor"),
+        extract_field(data, "PRODUCTOSASESOR"),
+        extract_field(data, "PRODUCTS"),
+        extract_field(data, "products"),
+        ))
+
+    if not products:
+        products = ["Salud", "Auto", "Vitales"]
 
     advisor = {
-        "advisorId": str(advisor_id).strip(),
+        "advisorId": str(microsite_id or advisor_id).strip(),
+        "internalAdvisorId": str(advisor_id).strip(),
         "name": first_value(name, default="Asesor de Seguros"),
         "email": email,
         "phone": phone,
-        "whatsapp": phone,
-        "city": "",
+        "whatsapp": whatsapp,
+        "city": city,
         "advisorCode": advisor_code,
-        "role": "Asesor de Seguros",
+        "role": role,
         "photoUrl": photo_url,
-        "bio": "Especialista en soluciones de protección personal, familiar y patrimonial.",
-        "products": [
-            "Seguro de Salud",
-            "Seguro de Vida",
-            "Seguro de Auto",
-            "Seguro de Hogar",
-            "Seguro Empresarial",
-        ],
+        "bio": bio,
+        "products": products,
     }
+
+    if website:
+        advisor["website"] = website
+
+    if contact_url:
+        advisor["contactUrl"] = contact_url
 
     return advisor
 
@@ -288,27 +424,28 @@ def stable_suffix(value):
     return hashlib.sha1(str(value).encode("utf-8")).hexdigest()[:6]
 
 
-def create_advisor_record(danaparam, dana_data):
+def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
     advisor = normalize_dana_response(dana_data)
 
-    advisor_id_from_dana = str(advisor.get("advisorId") or "").strip()
+    advisor_id_from_dana = str(advisor.get("advisorId") or preferred_advisor_id or "").strip()
 
     if advisor_id_from_dana:
         advisor_id = advisor_id_from_dana
+        advisor["advisorId"] = advisor_id
     else:
         base_slug = slugify(advisor.get("name", "asesor"))
-        advisor_id = f"{base_slug}-{stable_suffix(danaparam)}"
+        advisor_id = f"{base_slug}-{stable_suffix(dana_identifier)}"
         advisor["advisorId"] = advisor_id
 
     microsite_url = f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{advisor_id}"
 
     return {
         "advisorId": advisor_id,
-        "danaparam": str(danaparam),
+        "danaIdentifier": str(dana_identifier),
         "slug": advisor_id,
         "micrositeUrl": microsite_url,
         "advisor": advisor,
-        "source": "danaconnect_data_retrieval",
+        "source": "danaconnect",
         "updatedAt": int(time.time()),
     }
 
@@ -378,7 +515,6 @@ def handle_landing_provision(payload):
     dana_data = fetch_dana_contact(danaparam)
 
     record = create_advisor_record(danaparam, dana_data)
-    persistence = save_record(record)
 
     return response(
         200,
@@ -387,7 +523,6 @@ def handle_landing_provision(payload):
             "message": "Microsite provisionado correctamente",
             "type": "landing_provision",
             **record,
-            "persistence": persistence,
         },
     )
 
@@ -401,28 +536,14 @@ def handle_get_advisor(query):
             "message": "Falta advisorId",
         })
 
-    table = dynamodb_table()
-
-    if not table:
-        return response(404, {
-            "ok": False,
-            "message": "DynamoDB no configurado. No se puede consultar advisor guardado.",
-        })
-
-    result = table.get_item(Key={"advisorId": advisor_id})
-    item = result.get("Item")
-
-    if not item:
-        return response(404, {
-            "ok": False,
-            "message": "Advisor no encontrado",
-            "advisorId": advisor_id,
-        })
+    dana_data = fetch_dana_contact(advisor_id)
+    record = create_advisor_record(advisor_id, dana_data, preferred_advisor_id=advisor_id)
 
     return response(200, {
         "ok": True,
         "advisorId": advisor_id,
-        "record": item,
+        "type": "get_advisor",
+        **record,
     })
 
 

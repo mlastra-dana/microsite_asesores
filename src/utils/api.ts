@@ -1,7 +1,11 @@
 export type Advisor = {
   advisorId: string;
+  internalAdvisorId?: string;
+  company?: string;
   name: string;
   email: string;
+  website?: string;
+  contactUrl?: string;
   phone: string;
   whatsapp?: string;
   city?: string;
@@ -26,6 +30,35 @@ export type ProvisionResponse = {
     table: string;
   };
 };
+
+export async function fetchAdvisorById(advisorId: string): Promise<ProvisionResponse | null> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!apiUrl) {
+    return null;
+  }
+
+  const response = await fetch(`${apiUrl}?advisorId=${encodeURIComponent(advisorId)}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    throw new Error(`Respuesta no válida de la API (${response.status}): ${text.substring(0, 100)}`);
+  }
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.message || `No se pudo consultar el asesor ${advisorId}`);
+  }
+
+  return data as ProvisionResponse;
+}
 
 /**
  * Llama a la Lambda de provisionamiento con el danaparam recibido en el email de DANAconnect
