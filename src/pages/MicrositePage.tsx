@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import AdvisorCard from '../components/AdvisorCard';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import { getAdvisorById, type Advisor } from '../data/advisors';
+import { getAdvisorById, hasAdvisorById, type Advisor } from '../data/advisors';
 import { products } from '../data/products';
 import { fetchAdvisorById, type Advisor as ApiAdvisor } from '../utils/api';
 
@@ -30,6 +30,7 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
 export default function MicrositePage() {
   const { advisorId } = useParams();
   const fallbackAdvisor = getAdvisorById(advisorId);
+  const hasLocalAdvisor = hasAdvisorById(advisorId);
   const [advisor, setAdvisor] = useState(fallbackAdvisor);
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [advisorError, setAdvisorError] = useState('');
@@ -38,7 +39,10 @@ export default function MicrositePage() {
     let isMounted = true;
 
     async function loadAdvisor() {
-      if (!advisorId) {
+      if (!advisorId || hasLocalAdvisor) {
+        setAdvisor(fallbackAdvisor);
+        setIsLoadingAdvisor(false);
+        setAdvisorError('');
         return;
       }
 
@@ -69,7 +73,7 @@ export default function MicrositePage() {
     return () => {
       isMounted = false;
     };
-  }, [advisorId, fallbackAdvisor]);
+  }, [advisorId, fallbackAdvisor, hasLocalAdvisor]);
 
   const visibleProducts = useMemo(() => {
     if (!advisor.products.length) {

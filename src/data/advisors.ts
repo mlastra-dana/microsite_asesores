@@ -32,7 +32,7 @@ export const advisors: Advisor[] = [
     advisorCode: 'SUDEASEG S-69',
     photoUrl: tuSeguroLogo,
     bio: 'Compara opciones para proteger tu salud, automóvil, mascotas y viajes con el respaldo de especialistas de amplia trayectoria en Latinoamérica.',
-    products: ['Vitales', 'Auto', 'Salud', 'C.R.'],
+    products: ['Seguro de Salud', 'Seguro de Auto', 'Seguro de Vida', 'Seguro de Hogar'],
   },
   {
     id: 'FDF34DAC98DA4246',
@@ -96,4 +96,8 @@ export const defaultAdvisor = advisors[0];
 
 export function getAdvisorById(id?: string) {
   return advisors.find((advisor) => advisor.id === id) ?? defaultAdvisor;
+}
+
+export function hasAdvisorById(id?: string) {
+  return advisors.some((advisor) => advisor.id === id);
 }
