@@ -5,7 +5,6 @@ import json
 import os
 import re
 import time
-import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -48,6 +47,11 @@ MICROSITE_BASE_URL = os.environ.get(
 MICROSITE_ID_SECRET = os.environ.get("MICROSITE_ID_SECRET", "")
 
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "")
+DANA_REFRESH_ON_GET = os.environ.get("DANA_REFRESH_ON_GET", "true").strip().lower() not in (
+    "0",
+    "false",
+    "no",
+)
 
 TOKEN_CACHE = {
     "access_token": None,
@@ -513,17 +517,6 @@ def normalize_dana_response(data):
     return advisor
 
 
-def slugify(value):
-    normalized = unicodedata.normalize("NFKD", value or "")
-    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
-    slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_value).strip("-").lower()
-    return slug or "asesor"
-
-
-def stable_suffix(value):
-    return hashlib.sha1(str(value).encode("utf-8")).hexdigest()[:6]
-
-
 def microsite_id_secret():
     return MICROSITE_ID_SECRET or f"{MICROSITE_BASE_URL.rstrip('/')}|microsite-asesores"
 
@@ -609,13 +602,76 @@ def save_record(record):
     }
 
 
+def get_saved_record(advisor_id):
+    table = dynamodb_table()
+
+    if not table:
+        print("DynamoDB no configurado. No se puede resolver advisorId:", advisor_id)
+        return None
+
+    result = table.get_item(Key={"advisorId": str(advisor_id)})
+    return result.get("Item")
+
+
+def refresh_record_from_dana(record, fallback_advisor_id):
+    if not DANA_REFRESH_ON_GET:
+        return record, {
+            "attempted": False,
+            "refreshed": False,
+            "reason": "DANA_REFRESH_ON_GET desactivado",
+        }
+
+    dana_identifier = str(record.get("danaIdentifier") or "").strip()
+
+    if not dana_identifier:
+        return record, {
+            "attempted": False,
+            "refreshed": False,
+            "reason": "Registro sin danaIdentifier",
+        }
+
+    try:
+        dana_data = fetch_dana_contact(dana_identifier)
+        dana_error = dana_error_message(dana_data)
+
+        if dana_error:
+            return record, {
+                "attempted": True,
+                "refreshed": False,
+                "reason": f"DANAconnect respondio: {dana_error}",
+            }
+
+        fresh_record = create_advisor_record(
+            dana_identifier,
+            dana_data,
+            preferred_advisor_id=fallback_advisor_id,
+        )
+        persistence = save_record(fresh_record)
+
+        return fresh_record, {
+            "attempted": True,
+            "refreshed": True,
+            "persistence": persistence,
+        }
+
+    except Exception as error:
+        print("refresh_record_from_dana_error:", str(error))
+        return record, {
+            "attempted": True,
+            "refreshed": False,
+            "reason": str(error),
+        }
+
+
 def save_event(payload):
     table = dynamodb_table()
 
     event_id = f"{payload.get('type', 'event')}#{int(time.time() * 1000)}"
+    target_advisor_id = str(payload.get("advisorId", "unknown"))
 
     item = {
-        "advisorId": payload.get("advisorId", "unknown"),
+        "advisorId": f"EVENT#{target_advisor_id}#{event_id}",
+        "targetAdvisorId": target_advisor_id,
         "eventId": event_id,
         "type": payload.get("type"),
         "payload": payload,
@@ -658,6 +714,7 @@ def handle_landing_provision(payload):
         })
 
     record = create_advisor_record(danaparam, dana_data)
+    persistence = save_record(record)
 
     return response(
         200,
@@ -666,6 +723,7 @@ def handle_landing_provision(payload):
             "message": "Microsite preparado correctamente",
             "type": "landing_provision",
             **record,
+            "persistence": persistence,
         },
     )
 
@@ -691,6 +749,7 @@ def handle_microsite_activate(payload):
         })
 
     record = create_advisor_record(danaparam, dana_data)
+    persistence = save_record(record)
     trigger_result = trigger_dana_update(danaparam, {
         "MICROSITEID": record["advisorId"],
         "MICROSITEURL": record["micrositeUrl"],
@@ -705,6 +764,7 @@ def handle_microsite_activate(payload):
             "message": "Microsite provisionado correctamente",
             "type": "microsite_activate",
             **record,
+            "persistence": persistence,
             "trigger": trigger_result,
         },
     )
@@ -719,8 +779,17 @@ def handle_get_advisor(query):
             "message": "Falta advisorId",
         })
 
-    dana_data = fetch_dana_contact(advisor_id)
-    record = create_advisor_record(advisor_id, dana_data, preferred_advisor_id=advisor_id)
+    record = get_saved_record(advisor_id)
+
+    if not record:
+        return response(404, {
+            "ok": False,
+            "message": "No se encontro este microsite. Debe abrirse primero desde el enlace enviado por DANA.",
+            "type": "get_advisor",
+            "advisorId": advisor_id,
+        })
+
+    record, refresh_status = refresh_record_from_dana(record, advisor_id)
 
     if not has_real_advisor_data(record.get("advisor")):
         return response(404, {
@@ -728,6 +797,7 @@ def handle_get_advisor(query):
             "message": "No se encontro informacion del asesor en DANAconnect para este microsite.",
             "type": "get_advisor",
             "advisorId": advisor_id,
+            "refresh": refresh_status,
         })
 
     return response(200, {
@@ -735,6 +805,7 @@ def handle_get_advisor(query):
         "advisorId": advisor_id,
         "type": "get_advisor",
         **record,
+        "refresh": refresh_status,
     })
 
 
@@ -761,15 +832,6 @@ def handle_simple_event(payload):
             "advisorEmail",
             "platform",
             "micrositeUrl",
-        ],
-        "otp_request": [
-            "advisorId",
-            "email",
-        ],
-        "otp_verify": [
-            "advisorId",
-            "email",
-            "otp",
         ],
     }
 

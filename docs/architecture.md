@@ -7,12 +7,15 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 1. La app en Amplify recibe una visita a una URL inicial del asesor.
 2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API de DANAconnect para traer el registro del asesor desde la lista de contactos usando `danaparam`.
 3. La Lambda normaliza los datos y genera o resuelve un `MICROSITEID` opaco por asesor.
-4. El usuario activa su perfil y queda redirigido hacia una URL limpia, por ejemplo `/asesor/9F3806A23CEA5138`.
-5. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda y la Lambda trae los datos vigentes desde DANAconnect.
-6. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
-7. Para Apple se contempla generar `.pkpass`.
-8. Para Android se contempla un pase compatible con wallet.
-9. El asesor puede entrar a su espacio de actualizacion con OTP, sin depender de un clic de correo ni de un token permanente.
+4. La Lambda guarda el registro normalizado en DynamoDB usando `MICROSITEID` como `advisorId`.
+5. El usuario entra hacia una URL limpia, por ejemplo `/asesor/9F3806A23CEA5138`.
+6. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda.
+7. La Lambda usa DynamoDB para resolver el `MICROSITEID`, refresca los datos desde DANAconnect con el `danaIdentifier` guardado y actualiza DynamoDB.
+8. Si DANAconnect no responde, la Lambda devuelve el ultimo snapshot guardado para no dejar el microsite fuera de servicio.
+9. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
+10. Para Apple se contempla generar `.pkpass`.
+11. Para Android se contempla un pase compatible con wallet.
+12. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect sigue siendo la fuente oficial.
 
 ## Backend
 
@@ -21,10 +24,8 @@ El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/in
 Eventos previstos:
 
 - `landing_provision`: trae el registro desde Data Retrieval API/DANAconnect y devuelve la URL limpia del asesor.
-- `get_advisor`: trae el registro actualizado del asesor desde DANAconnect usando el identificador de la URL.
+- `get_advisor`: resuelve el `MICROSITEID` en DynamoDB, refresca desde DANAconnect y devuelve el dato actualizado cuando DANA responde.
 - `pass_request`: genera o solicita el pass de Apple/Android.
-- `otp_request`: genera un OTP para el asesor.
-- `otp_verify`: valida el OTP antes de permitir cambios.
 - `quote_request`: recibe solicitudes de cotizacion.
 - `advisor_update`: recibe propuestas de actualizacion de datos.
 
@@ -35,7 +36,7 @@ DANAconnect es la fuente principal para los datos del asesor. La lista de contac
 - `ADVISORID`: identificador interno del asesor.
 - `MICROSITEID`: identificador opaco usado en la URL publica. Puede cargarse vacio; la Lambda lo genera durante la activacion si no existe.
 - `MICROSITEURL`: enlace permanente del microsite.
-- `MICROSITEACTIVADO`: bandera `SI`/`NO` para continuar el flujo y enviar el segundo correo.
+- `MICROSITEACTIVADO`: bandera `SI`/`NO` para marcar que el perfil ya fue preparado.
 - `NOMBREASESOR`
 - `EMAILASESOR`
 - `TELEFONOASESOR`
@@ -61,24 +62,25 @@ Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
 - `COTIZADOR_CR`
 - `COTIZADOR_SALUD_PANAMA`
 
-El cliente debe cargar en DANA la informacion basica y las banderas de cotizadores. Nosotros generamos el `MICROSITEID` cuando el asesor activa su microsite, para no exponer el `ADVISORID` real en la URL publica.
+El cliente debe cargar en DANA la informacion basica y las banderas de cotizadores. Nosotros generamos el `MICROSITEID` cuando el asesor abre su enlace desde DANA, para no exponer el `ADVISORID` real en la URL publica.
 
 El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
 
 Plantillas de correo:
 
-- `docs/email-asesor-activacion.html`: primer correo para activar el microsite.
-- `docs/email-asesor-enlace-permanente.html`: segundo correo con `$s{MICROSITEURL}`.
+- `docs/email-asesor-activacion.html`: correo de acceso inicial al microsite.
+- `docs/email-asesor-enlace-permanente.html`: correo opcional con `$s{MICROSITEURL}` si se decide enviar un recordatorio.
 
-## Persistencia opcional
+## Persistencia
 
-DynamoDB puede usarse como cache o para guardar actividad, pero no es requisito para resolver el microsite. Sus usos opcionales serian:
+DynamoDB es necesario para que el enlace limpio `/asesor/{MICROSITEID}` funcione en cualquier navegador y en cualquier momento. La tabla debe tener partition key `advisorId` tipo string.
 
+- Resolver `MICROSITEID -> registro normalizado del asesor`.
+- Guardar el `danaIdentifier` original para refrescar datos desde DANAconnect.
+- Guardar el ultimo snapshot valido por si DANAconnect no responde.
 - Solicitudes de cotizacion.
 - Solicitudes de actualizacion.
-- OTP temporal con expiracion.
 - Historial de generacion de pases wallet.
-- Cache temporal del registro normalizado del asesor, si se quisiera reducir llamadas a DANAconnect.
 
 ## Importante
 

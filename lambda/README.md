@@ -53,6 +53,7 @@ DANA_DATA_FIELDS=ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELE
 DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 MICROSITE_ID_SECRET=valor-largo-privado
+DANA_REFRESH_ON_GET=true
 CORS_ORIGIN=*
 ```
 
@@ -78,13 +79,22 @@ Ese Trigger permite que DANA continue el flujo y envie el segundo correo con el 
 
 Para produccion, `MICROSITE_ID_SECRET` debe ser una cadena privada y estable. Si se cambia despues de activar asesores, los nuevos IDs generados para registros sin `MICROSITEID` podrian cambiar. Los asesores ya activados conservan el `MICROSITEID` guardado en DANA.
 
-Opcional para guardar eventos del microsite, como cotizaciones o actualizaciones:
+Necesaria para resolver enlaces permanentes:
 
 ```bash
-DYNAMODB_TABLE=MicrositeEvents
+DYNAMODB_TABLE=MicrositeAdvisors
 ```
 
-Si `DYNAMODB_TABLE` no existe, la Lambda imprime los eventos en CloudWatch Logs y sigue respondiendo correctamente. No se requiere DynamoDB para consultar asesores.
+La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde al `MICROSITEID` publico. Durante el primer acceso desde DANA, la Lambda guarda el registro normalizado en DynamoDB junto con el `danaIdentifier`.
+
+Luego `/asesor/{MICROSITEID}` funciona asi:
+
+1. Busca el registro en DynamoDB.
+2. Usa el `danaIdentifier` guardado para consultar nuevamente DANAconnect.
+3. Si DANA responde, actualiza DynamoDB y devuelve los datos frescos.
+4. Si DANA falla, devuelve el ultimo registro guardado para no romper el microsite.
+
+`DANA_REFRESH_ON_GET=true` mantiene a DANA como fuente viva de datos. Solo debe apagarse temporalmente si DANAconnect esta en mantenimiento o si se quiere probar el fallback de Dynamo.
 
 ## Data Retrieval API usada
 
@@ -157,7 +167,7 @@ puede pedir los datos actuales a la Lambda:
 curl -i "https://xxxxx.lambda-url.region.on.aws/?advisorId=9F3806A23CEA5138"
 ```
 
-La Lambda resuelve ese identificador contra DANAconnect y devuelve:
+La Lambda resuelve ese identificador contra DynamoDB, refresca desde DANAconnect cuando es posible y devuelve:
 
 ```json
 {
@@ -197,10 +207,6 @@ Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda
 
 `landing_provision`: provisionamiento del microsite desde Data Retrieval API o DANAconnect.
 
-`otp_request`: solicitud de OTP para que el asesor entre a su espacio.
-
-`otp_verify`: validacion del OTP.
-
 ## Roadmap backend
 
 El backend definitivo se mantiene en Python. La Lambda puede evolucionar para:
@@ -209,7 +215,6 @@ El backend definitivo se mantiene en Python. La Lambda puede evolucionar para:
 - Resolver una URL canonica por asesor.
 - Crear o solicitar archivos `.pkpass` para Apple Wallet.
 - Crear un pase compatible con Android Wallet.
-- Generar y validar OTP para el acceso del asesor.
 - Enviar eventos a DANAconnect o EventBridge.
 
 ## Recursos AWS necesarios

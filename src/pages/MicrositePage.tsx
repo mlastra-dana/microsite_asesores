@@ -94,26 +94,19 @@ export default function MicrositePage() {
         return;
       }
 
-      if (advisorId && hasLocalAdvisor) {
+      const cached = !dataRef ? readCachedProvision(advisorId) : null;
+      if (cached?.advisor) {
+        setAdvisor(toPageAdvisor(cached.advisor, fallbackAdvisor));
+      } else if (advisorId && hasLocalAdvisor) {
         setAdvisor(fallbackAdvisor);
-        setIsLoadingAdvisor(false);
-        setAdvisorError('');
-        return;
+      } else {
+        setAdvisor(null);
       }
 
-      setAdvisor(null);
       setIsLoadingAdvisor(true);
       setAdvisorError('');
 
       try {
-        const cached = !dataRef ? readCachedProvision(advisorId) : null;
-        if (cached?.advisor) {
-          setAdvisor(toPageAdvisor(cached.advisor, fallbackAdvisor));
-          setAdvisorError('');
-          setIsLoadingAdvisor(false);
-          return;
-        }
-
         const result = dataRef
           ? await provisionAdvisor(dataRef)
           : await fetchAdvisorById(advisorId || '');
