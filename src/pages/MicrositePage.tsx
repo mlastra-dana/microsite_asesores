@@ -59,6 +59,13 @@ export default function MicrositePage() {
     let isMounted = true;
 
     async function loadAdvisor() {
+      if (dataRef && /[{}$]/.test(dataRef)) {
+        setAdvisor(null);
+        setIsLoadingAdvisor(false);
+        setAdvisorError('El enlace no fue personalizado por DANA. La referencia llego como plantilla y no como valor real.');
+        return;
+      }
+
       if (!advisorId && !dataRef) {
         setAdvisor(null);
         setIsLoadingAdvisor(false);

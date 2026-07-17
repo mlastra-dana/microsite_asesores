@@ -235,6 +235,24 @@ def fetch_dana_contact(identifier):
         ) from error
 
 
+def dana_error_message(data):
+    if not isinstance(data, dict):
+        return ""
+
+    ws_error = data.get("wsError")
+    if isinstance(ws_error, dict):
+        return str(ws_error.get("errorDescription") or ws_error.get("message") or ws_error)
+
+    error = data.get("error")
+    if isinstance(error, dict):
+        return str(error.get("errorDescription") or error.get("message") or error)
+
+    if error:
+        return str(error)
+
+    return ""
+
+
 def trigger_dana_update(danaparam, values):
     authorization_header = dana_basic_authorization_header()
 
@@ -630,6 +648,15 @@ def handle_landing_provision(payload):
 
     dana_data = fetch_dana_contact(danaparam)
 
+    dana_error = dana_error_message(dana_data)
+    if dana_error:
+        status_code = 410 if "expired" in dana_error.lower() else 502
+        return response(status_code, {
+            "ok": False,
+            "message": f"DANAconnect respondio: {dana_error}",
+            "type": "landing_provision",
+        })
+
     record = create_advisor_record(danaparam, dana_data)
 
     return response(
@@ -653,6 +680,16 @@ def handle_microsite_activate(payload):
         })
 
     dana_data = fetch_dana_contact(danaparam)
+
+    dana_error = dana_error_message(dana_data)
+    if dana_error:
+        status_code = 410 if "expired" in dana_error.lower() else 502
+        return response(status_code, {
+            "ok": False,
+            "message": f"DANAconnect respondio: {dana_error}",
+            "type": "microsite_activate",
+        })
+
     record = create_advisor_record(danaparam, dana_data)
     trigger_result = trigger_dana_update(danaparam, {
         "MICROSITEID": record["advisorId"],
