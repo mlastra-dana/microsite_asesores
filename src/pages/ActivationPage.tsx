@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Download, ExternalLink, User, Mail, Phone, Briefcase } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { AlertCircle, CheckCircle, ExternalLink, User, Mail, Phone, Briefcase } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
-import { provisionAdvisor, type ProvisionResponse } from '../utils/api';
+import { activateAdvisorMicrosite, provisionAdvisor, type ProvisionResponse } from '../utils/api';
 
 type ActivationState = 'loading' | 'no_param' | 'success' | 'error';
 
@@ -12,7 +12,7 @@ export default function ActivationPage() {
   const [state, setState] = useState<ActivationState>('loading');
   const [provisionData, setProvisionData] = useState<ProvisionResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [showDownloadToast, setShowDownloadToast] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
   const danaparam = searchParams.get('dana') ?? searchParams.get('danaparam');
 
@@ -50,17 +50,34 @@ export default function ActivationPage() {
     activateMicrosite();
   }, [danaparam]);
 
-  const handleDownloadCard = () => {
-    setShowDownloadToast(true);
-    setTimeout(() => setShowDownloadToast(false), 5000);
-  };
-
   const handleBackToDemo = () => {
     navigate('/asesor/2377');
   };
 
   const handleBackToHome = () => {
     navigate('/');
+  };
+
+  const handleActivateMicrosite = async () => {
+    if (!danaparam) {
+      return;
+    }
+
+    try {
+      setIsActivating(true);
+      setErrorMessage('');
+      const result = await activateAdvisorMicrosite(danaparam);
+      const targetUrl = result.micrositeUrl
+        ? new URL(result.micrositeUrl).pathname
+        : `/asesor/${result.advisorId}`;
+
+      navigate(targetUrl);
+    } catch (error) {
+      console.error('Error activando microsite:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'No se pudo activar el microsite.');
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   // Estado: Sin parámetro danaparam
@@ -172,8 +189,6 @@ export default function ActivationPage() {
 
   // Estado: Success
   const advisor = provisionData?.advisor;
-  const micrositeUrl = provisionData?.micrositeUrl;
-  const advisorId = provisionData?.advisorId;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E6EDF5] via-white to-white">
@@ -184,18 +199,6 @@ export default function ActivationPage() {
       </header>
       
       <main className="mx-auto max-w-4xl px-4 py-8">
-        {/* Toast para descarga */}
-        {showDownloadToast && (
-          <div className="fixed top-4 right-4 z-50 animate-slide-in rounded-lg bg-green-50 p-4 shadow-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <p className="text-sm font-medium text-green-800">
-                Próximamente podrás descargar tu carnet digital para Apple Wallet y Android.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Encabezado success */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
@@ -203,11 +206,11 @@ export default function ActivationPage() {
           </div>
           
           <h1 className="text-3xl font-extrabold text-[#111827] md:text-4xl">
-            Tu perfil digital está listo
+            Activa tu perfil digital
           </h1>
           
           <p className="mt-3 text-lg text-[#6B7280]">
-            Generamos tu microsite personalizado y tu carnet digital como asesor de Mercantil Seguros.
+            Revisa tu información y activa tu microsite para generar tu enlace permanente.
           </p>
         </div>
 
@@ -275,61 +278,43 @@ export default function ActivationPage() {
           {/* Acciones */}
           <div className="space-y-6">
             <div className="rounded-[28px] bg-white p-6 shadow-soft">
-              <h2 className="mb-4 text-xl font-bold text-[#111827]">Acciones disponibles</h2>
+              <h2 className="mb-4 text-xl font-bold text-[#111827]">Activación</h2>
               
               <div className="space-y-4">
-                <Link
-                  to={micrositeUrl?.replace(window.location.origin, '') || `/asesor/${advisorId}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
+                <button
+                  type="button"
+                  onClick={handleActivateMicrosite}
+                  disabled={isActivating}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Ver mi microsite
-                </Link>
-
-                {advisorId && (
-                  <Link
-                    to={`/asesor/${advisorId}/actualizar`}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border border-[#00478D] px-5 py-3 text-sm font-extrabold text-[#00478D] transition hover:bg-[#00478D] hover:text-white"
-                  >
-                    <User className="h-4 w-4" />
-                    Actualizar mis datos
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleDownloadCard}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#E6EDF5] px-5 py-3 text-sm font-extrabold text-[#00478D] transition hover:bg-[#E5E7EB]"
-                >
-                  <Download className="h-4 w-4" />
-                  Descargar carnet digital
+                  {isActivating ? 'Activando...' : 'Activar mi microsite'}
                 </button>
+
+                {errorMessage && (
+                  <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                    {errorMessage}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Bloque explicativo */}
             <div className="rounded-[28px] border border-[#E5E7EB] bg-white p-6">
-              <h3 className="mb-3 font-bold text-[#111827]">Tu microsite te permite:</h3>
+              <h3 className="mb-3 font-bold text-[#111827]">Al activar:</h3>
               
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Compartir tu perfil profesional con clientes.</span>
+                  <span className="text-sm text-[#6B7280]">Generaremos tu enlace permanente.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Facilitar el contacto por WhatsApp.</span>
+                  <span className="text-sm text-[#6B7280]">Recibirás un correo para guardarlo en tu teléfono.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Recibir solicitudes de cotización.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Revisar y actualizar tus datos.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Activar tu carnet digital para compartir tu perfil rápidamente.</span>
+                  <span className="text-sm text-[#6B7280]">Entrarás directamente a tu microsite.</span>
                 </li>
               </ul>
             </div>

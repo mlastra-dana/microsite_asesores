@@ -113,6 +113,41 @@ export async function provisionAdvisor(danaparam: string): Promise<ProvisionResp
     throw error;
   }
 }
+
+export async function activateAdvisorMicrosite(danaparam: string): Promise<ProvisionResponse> {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!apiUrl) {
+    throw new Error('VITE_API_URL no está configurada en las variables de entorno.');
+  }
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type: 'microsite_activate',
+      dana: danaparam,
+    }),
+  });
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    throw new Error(`Respuesta no válida de la API (${response.status}): ${text.substring(0, 100)}`);
+  }
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.message || `Error ${response.status}: ${response.statusText}`);
+  }
+
+  return data as ProvisionResponse;
+}
+
 /**
  * Función de compatibilidad para mantener el código existente.
  * Envía un evento simple a la Lambda (quote_request, advisor_update, pass_request, etc.)

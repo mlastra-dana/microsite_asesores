@@ -594,6 +594,29 @@ def handle_landing_provision(payload):
     dana_data = fetch_dana_contact(danaparam)
 
     record = create_advisor_record(danaparam, dana_data)
+
+    return response(
+        200,
+        {
+            "ok": True,
+            "message": "Microsite preparado correctamente",
+            "type": "landing_provision",
+            **record,
+        },
+    )
+
+
+def handle_microsite_activate(payload):
+    danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("dana")
+
+    if not danaparam:
+        return response(400, {
+            "ok": False,
+            "message": "Falta dana",
+        })
+
+    dana_data = fetch_dana_contact(danaparam)
+    record = create_advisor_record(danaparam, dana_data)
     trigger_result = trigger_dana_update(danaparam, {
         "MICROSITEID": record["advisorId"],
         "MICROSITEURL": record["micrositeUrl"],
@@ -605,7 +628,7 @@ def handle_landing_provision(payload):
         {
             "ok": True,
             "message": "Microsite provisionado correctamente",
-            "type": "landing_provision",
+            "type": "microsite_activate",
             **record,
             "trigger": trigger_result,
         },
@@ -773,6 +796,9 @@ def lambda_handler(event, context):
     try:
         if event_type == "landing_provision":
             return handle_landing_provision(payload)
+
+        if event_type == "microsite_activate":
+            return handle_microsite_activate(payload)
 
         return handle_simple_event(payload)
 
