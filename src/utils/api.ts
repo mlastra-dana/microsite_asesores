@@ -14,6 +14,7 @@ export type Advisor = {
   photoUrl?: string;
   bio?: string;
   products?: string[];
+  micrositeActive?: boolean;
 };
 
 export type ProvisionResponse = {

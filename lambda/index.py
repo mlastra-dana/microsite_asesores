@@ -416,6 +416,10 @@ def is_enabled(value):
     return str(value or "").strip().upper() in ("SI", "SÍ", "YES", "TRUE", "1", "Y")
 
 
+def is_disabled(value):
+    return str(value or "").strip().upper() in ("NO", "FALSE", "0", "N")
+
+
 def products_from_flags(data):
     enabled_products = []
 
@@ -496,6 +500,11 @@ def normalize_dana_response(data):
         extract_field(data, "CONTACT_URL"),
         extract_field(data, "contactUrl"),
     )
+    microsite_active_value = first_value(
+        extract_field(data, "MICROSITEACTIVADO"),
+        extract_field(data, "MicrositeActivado"),
+        extract_field(data, "micrositeActive"),
+    )
     products = products_from_flags(data)
 
     if not products:
@@ -522,6 +531,7 @@ def normalize_dana_response(data):
         "photoUrl": photo_url,
         "bio": bio,
         "products": products,
+        "micrositeActive": not is_disabled(microsite_active_value),
     }
 
     if website:
@@ -552,7 +562,7 @@ def generate_microsite_id(*values):
     return digest[:16].upper()
 
 
-def generate_public_microsite_id(microsite_id, internal_advisor_id, dana_identifier):
+def generate_public_microsite_id(microsite_id, internal_advisor_id, dana_identifier=""):
     return generate_microsite_id(
         "public-url",
         microsite_id,
@@ -567,13 +577,15 @@ def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
     microsite_id_from_dana = str(advisor.get("advisorId") or "").strip()
     internal_advisor_id = str(advisor.get("internalAdvisorId") or "").strip()
 
+    microsite_id_seed = internal_advisor_id or dana_identifier
     microsite_id = first_value(
         microsite_id_from_dana,
-        generate_microsite_id(internal_advisor_id, dana_identifier),
+        generate_microsite_id("microsite-id", microsite_id_seed),
     )
+    public_id_seed = internal_advisor_id or dana_identifier
     public_advisor_id = first_value(
         preferred_advisor_id,
-        generate_public_microsite_id(microsite_id, internal_advisor_id, dana_identifier),
+        generate_public_microsite_id(microsite_id, public_id_seed),
     )
 
     advisor["advisorId"] = public_advisor_id
@@ -587,11 +599,53 @@ def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
         "danaIdentifier": str(dana_identifier),
         "slug": public_advisor_id,
         "micrositeUrl": microsite_url,
+        "micrositeActive": bool(advisor.get("micrositeActive", True)),
         "advisor": advisor,
         "source": "danaconnect",
         "updatedAt": int(time.time()),
         "danaRefreshedAt": int(time.time()),
     }
+
+
+def create_advisor_record_from_payload(payload, preferred_advisor_id=""):
+    source_data = dict(payload.get("advisor") or payload)
+    internal_advisor_id = first_value(
+        source_data.get("internalAdvisorId"),
+        source_data.get("ADVISORID"),
+        source_data.get("AdvisorId"),
+        source_data.get("advisorId"),
+    )
+    source_identifier = first_value(
+        payload.get("dana"),
+        payload.get("danaParam"),
+        payload.get("danaparam"),
+        internal_advisor_id,
+    )
+
+    return create_advisor_record(
+        source_identifier,
+        source_data,
+        preferred_advisor_id=preferred_advisor_id,
+    )
+
+
+def has_direct_advisor_payload(payload):
+    if isinstance(payload.get("advisor"), dict):
+        return True
+
+    direct_fields = (
+        "ADVISORID",
+        "AdvisorId",
+        "internalAdvisorId",
+        "NOMBREASESOR",
+        "NombreAsesor",
+        "EMAILASESOR",
+        "EmailAsesor",
+        "TELEFONOASESOR",
+        "TelefonoAsesor",
+    )
+
+    return any(payload.get(field) not in (None, "") for field in direct_fields)
 
 
 def has_real_advisor_data(advisor):
@@ -643,6 +697,69 @@ def get_saved_record(advisor_id):
 
     result = table.get_item(Key={"advisorId": str(advisor_id)})
     return result.get("Item")
+
+
+def public_id_for_internal_advisor(internal_advisor_id):
+    internal_id = str(internal_advisor_id or "").strip()
+
+    if not internal_id:
+        return ""
+
+    microsite_id = generate_microsite_id("microsite-id", internal_id)
+    return generate_public_microsite_id(microsite_id, internal_id)
+
+
+def public_id_from_microsite_url(value):
+    if not value:
+        return ""
+
+    parsed = urllib.parse.urlparse(str(value))
+    match = re.search(r"/asesor/([^/?#]+)", parsed.path)
+
+    if not match:
+        return ""
+
+    return urllib.parse.unquote(match.group(1)).strip()
+
+
+def resolve_public_advisor_id(payload):
+    public_id = first_value(
+        payload.get("publicId"),
+        payload.get("publicAdvisorId"),
+        payload.get("advisorPublicId"),
+        public_id_from_microsite_url(payload.get("micrositeUrl") or payload.get("MICROSITEURL")),
+    )
+
+    if public_id:
+        return str(public_id).strip()
+
+    advisor_id = str(payload.get("advisorId") or payload.get("advisor_id") or "").strip()
+
+    if advisor_id and get_saved_record(advisor_id):
+        return advisor_id
+
+    internal_advisor_id = first_value(
+        payload.get("internalAdvisorId"),
+        payload.get("ADVISORID"),
+        payload.get("AdvisorId"),
+        advisor_id,
+    )
+
+    return public_id_for_internal_advisor(internal_advisor_id)
+
+
+def mark_record_active(record, active):
+    next_record = dict(record)
+    next_advisor = dict(next_record.get("advisor") or {})
+    active_value = bool(active)
+    now = int(time.time())
+
+    next_advisor["micrositeActive"] = active_value
+    next_record["advisor"] = next_advisor
+    next_record["micrositeActive"] = active_value
+    next_record["updatedAt"] = now
+
+    return next_record
 
 
 def refresh_record_from_dana(record, fallback_advisor_id):
@@ -815,6 +932,127 @@ def handle_microsite_activate(payload):
     )
 
 
+def handle_advisor_sync(payload):
+    action = str(payload.get("action") or "upsert").strip().lower()
+    danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("dana")
+    inactive_actions = ("deactivate", "inactivate", "inactive", "disable", "baja", "inactivar")
+
+    if action in inactive_actions:
+        if danaparam and not has_direct_advisor_payload(payload):
+            dana_data = fetch_dana_contact(danaparam)
+            dana_error = dana_error_message(dana_data)
+
+            if dana_error:
+                return response(502, {
+                    "ok": False,
+                    "message": f"DANAconnect respondio: {dana_error}",
+                    "type": "advisor_sync",
+                    "action": action,
+                })
+
+            record = mark_record_active(create_advisor_record(danaparam, dana_data), False)
+        else:
+            public_advisor_id = resolve_public_advisor_id(payload)
+
+            if not public_advisor_id:
+                return response(400, {
+                    "ok": False,
+                    "message": "Falta publicId, micrositeUrl, ADVISORID o dana para inactivar el microsite",
+                    "type": "advisor_sync",
+                    "action": action,
+                })
+
+            saved_record = get_saved_record(public_advisor_id)
+
+            if not saved_record:
+                return response(404, {
+                    "ok": False,
+                    "message": "No se encontro el microsite para inactivar",
+                    "type": "advisor_sync",
+                    "action": action,
+                    "advisorId": public_advisor_id,
+                })
+
+            record = mark_record_active(saved_record, False)
+
+        persistence = save_record(record)
+        trigger_result = None
+        record_dana_identifier = first_value(danaparam, record.get("danaIdentifier"))
+
+        if record_dana_identifier:
+            trigger_result = trigger_dana_update(record_dana_identifier, {
+                "MICROSITEACTIVADO": "NO",
+            })
+
+        return response(200, {
+            "ok": True,
+            "message": "Microsite inactivado correctamente",
+            "type": "advisor_sync",
+            "action": action,
+            **record,
+            "persistence": persistence,
+            "trigger": trigger_result,
+        })
+
+    if danaparam and not has_direct_advisor_payload(payload):
+        dana_data = fetch_dana_contact(danaparam)
+        dana_error = dana_error_message(dana_data)
+
+        if dana_error:
+            return response(502, {
+                "ok": False,
+                "message": f"DANAconnect respondio: {dana_error}",
+                "type": "advisor_sync",
+                "action": action,
+            })
+
+        record = create_advisor_record(danaparam, dana_data)
+        source = "danaconnect_lookup"
+    else:
+        if not first_value(
+            payload.get("internalAdvisorId"),
+            payload.get("ADVISORID"),
+            payload.get("AdvisorId"),
+            payload.get("advisorId"),
+            (payload.get("advisor") or {}).get("internalAdvisorId") if isinstance(payload.get("advisor"), dict) else "",
+            (payload.get("advisor") or {}).get("ADVISORID") if isinstance(payload.get("advisor"), dict) else "",
+        ):
+            return response(400, {
+                "ok": False,
+                "message": "Falta ADVISORID para crear o actualizar el microsite desde payload directo",
+                "type": "advisor_sync",
+                "action": action,
+            })
+
+        record = create_advisor_record_from_payload(payload)
+        source = "direct_payload"
+
+    active_payload = first_value(payload.get("micrositeActive"), payload.get("MICROSITEACTIVADO"))
+    active = bool(record.get("micrositeActive", True)) if active_payload == "" else not is_disabled(active_payload)
+    record = mark_record_active(record, active)
+    persistence = save_record(record)
+    trigger_result = None
+
+    if danaparam:
+        trigger_result = trigger_dana_update(danaparam, {
+            "MICROSITEID": record["micrositeId"],
+            "MICROSITEURL": record["micrositeUrl"],
+            "MICROSITEACTIVADO": "SI" if active else "NO",
+            DANA_MICROSITE_PARAM_FIELD: danaparam,
+        })
+
+    return response(200, {
+        "ok": True,
+        "message": "Microsite sincronizado correctamente",
+        "type": "advisor_sync",
+        "action": action,
+        "source": source,
+        **record,
+        "persistence": persistence,
+        "trigger": trigger_result,
+    })
+
+
 def handle_get_advisor(query):
     advisor_id = query.get("advisorId") or query.get("advisor_id")
     should_refresh = str(query.get("refresh") or "").strip().lower() in (
@@ -857,6 +1095,14 @@ def handle_get_advisor(query):
             "type": "get_advisor",
             "advisorId": advisor_id,
             "refresh": refresh_status,
+        })
+
+    if record.get("micrositeActive") is False or record.get("advisor", {}).get("micrositeActive") is False:
+        return response(410, {
+            "ok": False,
+            "message": "Este microsite no se encuentra activo.",
+            "type": "get_advisor",
+            "advisorId": advisor_id,
         })
 
     return response(200, {
@@ -976,7 +1222,8 @@ def lambda_handler(event, context):
                 "usage": {
                     "landing_provision_get": "GET ?dana=VALOR_DANA_PARAM_REAL",
                     "landing_provision_post": "POST { type: 'landing_provision', dana: 'VALOR_DANA_PARAM_REAL' }",
-                    "get_advisor": "GET ?advisorId=24657722",
+                    "advisor_sync": "POST { type: 'advisor_sync', action: 'upsert|deactivate', ADVISORID: 'CODIGO_MERCANTIL', ...campos }",
+                    "get_advisor": "GET ?advisorId=PUBLICID_ENMASCARADO",
                 },
             },
         )
@@ -1003,6 +1250,9 @@ def lambda_handler(event, context):
 
         if event_type == "microsite_activate":
             return handle_microsite_activate(payload)
+
+        if event_type == "advisor_sync":
+            return handle_advisor_sync(payload)
 
         return handle_simple_event(payload)
 

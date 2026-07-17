@@ -4,20 +4,19 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 
 ## Flujo esperado
 
-1. La app en Amplify recibe una visita a una URL inicial del asesor.
-2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API de DANAconnect para traer el registro del asesor desde la lista de contactos usando `danaparam`.
-3. La Lambda normaliza los datos y genera o resuelve un `MICROSITEID` interno por asesor.
+1. Un flujo de DANAconnect detecta una generacion, actualizacion o inactivacion de asesor.
+2. Un nodo API de DANAconnect llama la Lambda con `advisor_sync` y envia los campos del asesor en JSON.
+3. La Lambda normaliza los datos recibidos y genera o resuelve un `MICROSITEID` interno por asesor.
 4. La Lambda genera un `PUBLICID` por HMAC para la URL publica, distinto al `MICROSITEID`.
 5. La Lambda guarda el registro normalizado en DynamoDB usando `PUBLICID` como `advisorId`.
-6. El usuario entra hacia una URL limpia y enmascarada, por ejemplo `/asesor/3A8F...`.
+6. La Lambda devuelve `MICROSITEID`, `MICROSITEURL` y estado para que DANA actualice la lista de contactos y envie la comunicacion con el link final.
 7. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda.
-8. La Lambda usa DynamoDB para resolver el `PUBLICID` y devuelve el ultimo snapshot valido inmediatamente.
-9. El frontend pide siempre un refresco en segundo plano con `refresh=true`; si el snapshot ya supero la ventana configurada y DANAconnect responde, la Lambda actualiza DynamoDB y devuelve datos frescos.
-10. Si DANAconnect no responde, el microsite permanece disponible con el ultimo snapshot guardado.
+8. La Lambda usa DynamoDB para resolver el `PUBLICID` y devuelve el ultimo snapshot valido.
+9. Si DANAconnect marca un asesor como inactivo, el flujo llama `advisor_sync` con `action=deactivate`, la Lambda guarda `micrositeActive=false` en DynamoDB y el microsite permanente deja de mostrarse.
 11. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
 12. Para Apple se contempla generar `.pkpass`.
 13. Para Android se contempla un pase compatible con wallet.
-14. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect sigue siendo la fuente oficial.
+14. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect o un servicio del banco siguen siendo la fuente oficial.
 
 ## Backend
 
@@ -25,8 +24,9 @@ El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/in
 
 Eventos previstos:
 
-- `landing_provision`: trae el registro desde Data Retrieval API/DANAconnect y devuelve la URL limpia del asesor.
-- `get_advisor`: resuelve el `PUBLICID` en DynamoDB. Si recibe `refresh=true`, refresca desde DANAconnect y actualiza DynamoDB.
+- `landing_provision`: compatibilidad para traer el registro desde Data Retrieval API/DANAconnect cuando existe `danaparam`.
+- `advisor_sync`: endpoint recomendado para que DANAconnect cree, actualice o inactive el snapshot del microsite en DynamoDB enviando los campos del asesor por JSON.
+- `get_advisor`: resuelve el `PUBLICID` en DynamoDB.
 - `pass_request`: genera o solicita el pass de Apple/Android.
 - `quote_request`: recibe solicitudes de cotizacion.
 - `advisor_update`: recibe propuestas de actualizacion de datos.
@@ -63,7 +63,9 @@ Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
 - `COTIZADOR_CR`
 - `COTIZADOR_SALUD_PANAMA`
 
-El cliente debe cargar en DANA la informacion basica, el `ADVISORID` unico y las banderas de cotizadores. Nosotros generamos el `MICROSITEID` interno cuando el asesor abre su enlace desde DANA, y generamos un `PUBLICID` distinto para no exponer ni el `ADVISORID` ni el `MICROSITEID` real en la URL publica.
+El cliente debe cargar en DANA la informacion basica, el `ADVISORID` unico y las banderas de cotizadores. El flujo de DANA envia esos datos a la Lambda por nodo API. Nosotros generamos el `MICROSITEID` interno usando `ADVISORID` como semilla estable y generamos un `PUBLICID` distinto para no exponer ni el `ADVISORID` ni el `MICROSITEID` real en la URL publica.
+
+Si DANA borra `MICROSITEID` y vuelve a enviar el mismo contacto, la Lambda regenera el mismo `MICROSITEID` y el mismo `PUBLICID` mientras `ADVISORID` se mantenga igual.
 
 El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
 
@@ -80,7 +82,7 @@ DynamoDB es necesario para que el enlace limpio `/asesor/{PUBLICID}` funcione en
 - Guardar el `MICROSITEID` interno como `micrositeId`.
 - Guardar el `danaIdentifier` original para refrescar datos desde DANAconnect.
 - Guardar el ultimo snapshot valido por si DANAconnect no responde.
-- Controlar la periodicidad de refresco con `DANA_REFRESH_MIN_SECONDS`.
+- Recibir cambios desde DANAconnect con `advisor_sync` para evitar consultas a DANA en cada carga del site.
 - Solicitudes de cotizacion.
 - Solicitudes de actualizacion.
 - Historial de generacion de pases wallet.
