@@ -34,12 +34,13 @@ DANAconnect es la fuente principal para los datos del asesor. La lista de contac
 
 - `ADVISORID`: identificador interno del asesor.
 - `MICROSITEID`: identificador opaco usado en la URL publica.
+- `MICROSITEURL`: enlace permanente del microsite.
+- `MICROSITEACTIVADO`: bandera `SI`/`NO` para continuar el flujo y enviar el segundo correo.
 - `NOMBREASESOR`
 - `EMAILASESOR`
 - `TELEFONOASESOR`
 - `CODIGOASESOR`
 - `FOTOASESOR`
-- `MICROSITEURL`
 
 Campos opcionales recomendados para enriquecer la experiencia:
 
@@ -61,6 +62,11 @@ Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
 - `COTIZADOR_SALUD_PANAMA`
 
 El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
+
+Plantillas de correo:
+
+- `docs/email-asesor-activacion.html`: primer correo para activar el microsite.
+- `docs/email-asesor-enlace-permanente.html`: segundo correo con `$s{MICROSITEURL}`.
 
 ## Persistencia opcional
 

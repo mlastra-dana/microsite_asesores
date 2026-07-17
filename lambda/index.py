@@ -31,9 +31,10 @@ DANA_OAUTH_SCOPE = os.environ.get("DANA_OAUTH_SCOPE", "")
 DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
 
 DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
+DANA_TRIGGER_URL = os.environ.get("DANA_TRIGGER_URL", "https://appserv.danaconnect.com/event/Trigger")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
-    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
+    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
 )
 
 DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
@@ -229,6 +230,62 @@ def fetch_dana_contact(identifier):
         raise RuntimeError(
             f"No se pudo conectar con DANAconnect: {error.reason}"
         ) from error
+
+
+def trigger_dana_update(danaparam, values):
+    authorization_header = dana_basic_authorization_header()
+
+    if not authorization_header:
+        return {
+            "sent": False,
+            "reason": "DANA_USERNAME/DANA_PASSWORD no configurados",
+        }
+
+    query = {"dana": str(danaparam)}
+    query.update({
+        key: str(value)
+        for key, value in values.items()
+        if value not in (None, "")
+    })
+
+    url = f"{DANA_TRIGGER_URL}?{urllib.parse.urlencode(query)}"
+    print("Enviando Trigger DANAconnect URL:", url)
+
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": authorization_header,
+            "Accept": "application/json",
+            "Content-Length": "0",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=12) as result:
+            raw_body = result.read().decode("utf-8")
+            print("Respuesta Trigger DANAconnect:", raw_body)
+            return {
+                "sent": True,
+                "statusCode": result.status,
+                "body": raw_body,
+            }
+
+    except urllib.error.HTTPError as error:
+        error_body = error.read().decode("utf-8", errors="replace")
+        print("Error HTTP Trigger DANAconnect:", error.code, error_body)
+        return {
+            "sent": False,
+            "statusCode": error.code,
+            "body": error_body,
+        }
+
+    except urllib.error.URLError as error:
+        print("Error conexion Trigger DANAconnect:", error.reason)
+        return {
+            "sent": False,
+            "reason": str(error.reason),
+        }
 
 
 def first_value(*values, default=""):
@@ -537,6 +594,11 @@ def handle_landing_provision(payload):
     dana_data = fetch_dana_contact(danaparam)
 
     record = create_advisor_record(danaparam, dana_data)
+    trigger_result = trigger_dana_update(danaparam, {
+        "MICROSITEID": record["advisorId"],
+        "MICROSITEURL": record["micrositeUrl"],
+        "MICROSITEACTIVADO": "SI",
+    })
 
     return response(
         200,
@@ -545,6 +607,7 @@ def handle_landing_provision(payload):
             "message": "Microsite provisionado correctamente",
             "type": "landing_provision",
             **record,
+            "trigger": trigger_result,
         },
     )
 
