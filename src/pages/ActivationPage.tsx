@@ -71,7 +71,7 @@ export default function ActivationPage() {
         ? new URL(result.micrositeUrl).pathname
         : `/asesor/${result.advisorId}`;
 
-      navigate(`${targetUrl}?dana=${encodeURIComponent(danaparam)}`);
+      navigate(targetUrl);
     } catch (error) {
       console.error('Error activando microsite:', error);
       setErrorMessage(error instanceof Error ? error.message : 'No se pudo activar el microsite.');
