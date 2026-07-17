@@ -205,7 +205,7 @@ export default function MicrositePage() {
         )}
         {advisor && (
           <>
-        <div className="border-b border-slate-200 bg-white">
+        <div id="inicio" className="border-b border-slate-200 bg-white">
           <AdvisorCard advisor={advisor} />
         </div>
 

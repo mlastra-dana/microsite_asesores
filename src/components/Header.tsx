@@ -15,9 +15,9 @@ export default function Header({ advisor }: HeaderProps) {
         </Link>
         <div className="hidden flex-1 items-center justify-end gap-8 md:flex">
           <nav className="flex items-center gap-7 text-sm font-semibold text-dana-muted">
-            <a href="#inicio" className="hover:text-mercantil-blue">Inicio</a>
-            <a href="#productos" className="hover:text-mercantil-blue">Productos</a>
-            <a href="#postventa" className="hover:text-mercantil-blue">Post-Venta</a>
+            <a href={`/asesor/${advisor.id}#inicio`} className="hover:text-mercantil-blue">Inicio</a>
+            <a href={`/asesor/${advisor.id}#productos`} className="hover:text-mercantil-blue">Productos</a>
+            <a href={`/asesor/${advisor.id}#postventa`} className="hover:text-mercantil-blue">Post-Venta</a>
             <Link
               to={`/asesor/${advisor.id}/actualizar`}
               className="rounded-lg bg-[#00478D] px-4 py-2 text-white shadow-sm transition hover:bg-[#00376E]"
