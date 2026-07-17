@@ -1,4 +1,5 @@
 import base64
+from decimal import Decimal
 import hashlib
 import hmac
 import json
@@ -53,17 +54,37 @@ DANA_REFRESH_ON_GET = os.environ.get("DANA_REFRESH_ON_GET", "true").strip().lowe
     "no",
 )
 
+
+def env_int(name, default):
+    try:
+        return int(os.environ.get(name, str(default)) or default)
+    except (TypeError, ValueError):
+        return default
+
+
+DANA_REFRESH_MIN_SECONDS = env_int("DANA_REFRESH_MIN_SECONDS", 3600)
+
 TOKEN_CACHE = {
     "access_token": None,
     "expires_at": 0,
 }
 
 
+def json_default(value):
+    if isinstance(value, Decimal):
+        if value % 1 == 0:
+            return int(value)
+
+        return float(value)
+
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 def response(status_code, body):
     return {
         "statusCode": status_code,
         "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
-        "body": json.dumps(body, ensure_ascii=False),
+        "body": json.dumps(body, ensure_ascii=False, default=json_default),
     }
 
 
@@ -559,6 +580,7 @@ def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
         "advisor": advisor,
         "source": "danaconnect",
         "updatedAt": int(time.time()),
+        "danaRefreshedAt": int(time.time()),
     }
 
 
@@ -630,6 +652,18 @@ def refresh_record_from_dana(record, fallback_advisor_id):
             "reason": "Registro sin danaIdentifier",
         }
 
+    now = int(time.time())
+    last_refresh = int(record.get("danaRefreshedAt") or record.get("updatedAt") or 0)
+
+    if DANA_REFRESH_MIN_SECONDS > 0 and last_refresh and now - last_refresh < DANA_REFRESH_MIN_SECONDS:
+        return record, {
+            "attempted": True,
+            "refreshed": False,
+            "reason": "Snapshot vigente dentro de la ventana de refresh",
+            "lastRefreshAt": last_refresh,
+            "nextRefreshAt": last_refresh + DANA_REFRESH_MIN_SECONDS,
+        }
+
     try:
         dana_data = fetch_dana_contact(dana_identifier)
         dana_error = dana_error_message(dana_data)
@@ -646,6 +680,7 @@ def refresh_record_from_dana(record, fallback_advisor_id):
             dana_data,
             preferred_advisor_id=fallback_advisor_id,
         )
+        fresh_record["danaRefreshedAt"] = now
         persistence = save_record(fresh_record)
 
         return fresh_record, {
@@ -772,6 +807,13 @@ def handle_microsite_activate(payload):
 
 def handle_get_advisor(query):
     advisor_id = query.get("advisorId") or query.get("advisor_id")
+    should_refresh = str(query.get("refresh") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "si",
+        "sí",
+    )
 
     if not advisor_id:
         return response(400, {
@@ -789,7 +831,14 @@ def handle_get_advisor(query):
             "advisorId": advisor_id,
         })
 
-    record, refresh_status = refresh_record_from_dana(record, advisor_id)
+    refresh_status = {
+        "attempted": False,
+        "refreshed": False,
+        "reason": "refresh no solicitado",
+    }
+
+    if should_refresh:
+        record, refresh_status = refresh_record_from_dana(record, advisor_id)
 
     if not has_real_advisor_data(record.get("advisor")):
         return response(404, {

@@ -123,6 +123,22 @@ export default function MicrositePage() {
             });
           }
         }
+
+        if (isMounted && !dataRef && advisorId && result?.advisor) {
+          fetchAdvisorById(advisorId, { refresh: true })
+            .then((freshResult) => {
+              if (!isMounted || !freshResult?.advisor) {
+                return;
+              }
+
+              const refreshedAdvisor = toPageAdvisor(freshResult.advisor, fallbackAdvisor);
+              setAdvisor(refreshedAdvisor);
+              cacheProvision(freshResult.advisorId || refreshedAdvisor.id, freshResult);
+            })
+            .catch((error) => {
+              console.warn('No se pudo refrescar el asesor desde DANA.', error);
+            });
+        }
       } catch (error) {
         console.warn('No se pudo cargar el asesor desde DANA.', error);
         if (isMounted) {

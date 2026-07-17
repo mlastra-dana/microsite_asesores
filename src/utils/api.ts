@@ -31,14 +31,22 @@ export type ProvisionResponse = {
   };
 };
 
-export async function fetchAdvisorById(advisorId: string): Promise<ProvisionResponse | null> {
+export async function fetchAdvisorById(advisorId: string, options: { refresh?: boolean } = {}): Promise<ProvisionResponse | null> {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   if (!apiUrl) {
     return null;
   }
 
-  const response = await fetch(`${apiUrl}?advisorId=${encodeURIComponent(advisorId)}`, {
+  const params = new URLSearchParams({
+    advisorId,
+  });
+
+  if (options.refresh) {
+    params.set('refresh', 'true');
+  }
+
+  const response = await fetch(`${apiUrl}?${params.toString()}`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',

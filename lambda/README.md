@@ -54,6 +54,7 @@ DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 MICROSITE_ID_SECRET=valor-largo-privado
 DANA_REFRESH_ON_GET=true
+DANA_REFRESH_MIN_SECONDS=3600
 CORS_ORIGIN=*
 ```
 
@@ -90,11 +91,14 @@ La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde
 Luego `/asesor/{MICROSITEID}` funciona asi:
 
 1. Busca el registro en DynamoDB.
-2. Usa el `danaIdentifier` guardado para consultar nuevamente DANAconnect.
-3. Si DANA responde, actualiza DynamoDB y devuelve los datos frescos.
-4. Si DANA falla, devuelve el ultimo registro guardado para no romper el microsite.
+2. Devuelve el ultimo snapshot valido inmediatamente.
+3. Si el request incluye `refresh=true`, usa el `danaIdentifier` guardado para consultar nuevamente DANAconnect.
+4. Si DANA responde, actualiza DynamoDB y devuelve los datos frescos.
+5. Si DANA falla, devuelve el ultimo registro guardado para no romper el microsite.
 
-`DANA_REFRESH_ON_GET=true` mantiene a DANA como fuente viva de datos. Solo debe apagarse temporalmente si DANAconnect esta en mantenimiento o si se quiere probar el fallback de Dynamo.
+`DANA_REFRESH_ON_GET=true` permite refrescar desde DANA cuando se solicita `refresh=true`. El enlace permanente no depende de ese refresco para abrir.
+
+`DANA_REFRESH_MIN_SECONDS` controla la periodicidad minima entre consultas de refresco a DANAconnect para un mismo asesor. El frontend siempre hace el segundo GET de verificacion; la Lambda consulta DANA solo cuando el snapshot ya supero esa ventana. Para forzar refresco en cada apertura, usa `0`.
 
 ## Data Retrieval API usada
 
@@ -167,7 +171,7 @@ puede pedir los datos actuales a la Lambda:
 curl -i "https://xxxxx.lambda-url.region.on.aws/?advisorId=9F3806A23CEA5138"
 ```
 
-La Lambda resuelve ese identificador contra DynamoDB, refresca desde DANAconnect cuando es posible y devuelve:
+La Lambda resuelve ese identificador contra DynamoDB y devuelve:
 
 ```json
 {

@@ -10,12 +10,13 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 4. La Lambda guarda el registro normalizado en DynamoDB usando `MICROSITEID` como `advisorId`.
 5. El usuario entra hacia una URL limpia, por ejemplo `/asesor/9F3806A23CEA5138`.
 6. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda.
-7. La Lambda usa DynamoDB para resolver el `MICROSITEID`, refresca los datos desde DANAconnect con el `danaIdentifier` guardado y actualiza DynamoDB.
-8. Si DANAconnect no responde, la Lambda devuelve el ultimo snapshot guardado para no dejar el microsite fuera de servicio.
-9. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
-10. Para Apple se contempla generar `.pkpass`.
-11. Para Android se contempla un pase compatible con wallet.
-12. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect sigue siendo la fuente oficial.
+7. La Lambda usa DynamoDB para resolver el `MICROSITEID` y devuelve el ultimo snapshot valido inmediatamente.
+8. El frontend pide siempre un refresco en segundo plano con `refresh=true`; si el snapshot ya supero la ventana configurada y DANAconnect responde, la Lambda actualiza DynamoDB y devuelve datos frescos.
+9. Si DANAconnect no responde, el microsite permanece disponible con el ultimo snapshot guardado.
+10. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
+11. Para Apple se contempla generar `.pkpass`.
+12. Para Android se contempla un pase compatible con wallet.
+13. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect sigue siendo la fuente oficial.
 
 ## Backend
 
@@ -24,7 +25,7 @@ El backend se hara con AWS Lambda en Python. La Lambda actual esta en `lambda/in
 Eventos previstos:
 
 - `landing_provision`: trae el registro desde Data Retrieval API/DANAconnect y devuelve la URL limpia del asesor.
-- `get_advisor`: resuelve el `MICROSITEID` en DynamoDB, refresca desde DANAconnect y devuelve el dato actualizado cuando DANA responde.
+- `get_advisor`: resuelve el `MICROSITEID` en DynamoDB. Si recibe `refresh=true`, refresca desde DANAconnect y actualiza DynamoDB.
 - `pass_request`: genera o solicita el pass de Apple/Android.
 - `quote_request`: recibe solicitudes de cotizacion.
 - `advisor_update`: recibe propuestas de actualizacion de datos.
@@ -78,6 +79,7 @@ DynamoDB es necesario para que el enlace limpio `/asesor/{MICROSITEID}` funcione
 - Resolver `MICROSITEID -> registro normalizado del asesor`.
 - Guardar el `danaIdentifier` original para refrescar datos desde DANAconnect.
 - Guardar el ultimo snapshot valido por si DANAconnect no responde.
+- Controlar la periodicidad de refresco con `DANA_REFRESH_MIN_SECONDS`.
 - Solicitudes de cotizacion.
 - Solicitudes de actualizacion.
 - Historial de generacion de pases wallet.
