@@ -1,10 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, ExternalLink, User, Mail, Phone, Briefcase } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import { activateAdvisorMicrosite, provisionAdvisor, type ProvisionResponse } from '../utils/api';
 
 type ActivationState = 'loading' | 'no_param' | 'success' | 'error';
+
+function getDanaParam(searchParams: URLSearchParams) {
+  const value = searchParams.get('dana') ?? searchParams.get('danaparam') ?? searchParams.get('ref');
+
+  if (value && !/[{}$]/.test(value)) {
+    return value;
+  }
+
+  try {
+    const referrer = document.referrer ? new URL(document.referrer) : null;
+    const referrerDana = referrer?.searchParams.get('dana');
+
+    if (referrerDana && !/[{}$]/.test(referrerDana)) {
+      return referrerDana;
+    }
+  } catch {
+    // Referrer may be absent or blocked by the sender.
+  }
+
+  return value || '';
+}
+
+function cacheAdvisorForMicrosite(data: ProvisionResponse | null) {
+  if (!data?.advisorId || !data.advisor) {
+    return;
+  }
+
+  window.localStorage.setItem(`micrositeAdvisor:${data.advisorId}`, JSON.stringify(data));
+}
 
 export default function ActivationPage() {
   const [searchParams] = useSearchParams();
@@ -14,7 +43,7 @@ export default function ActivationPage() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isActivating, setIsActivating] = useState(false);
 
-  const danaparam = searchParams.get('dana') ?? searchParams.get('danaparam');
+  const danaparam = useMemo(() => getDanaParam(searchParams), [searchParams]);
 
   useEffect(() => {
     const activateMicrosite = async () => {
@@ -67,14 +96,21 @@ export default function ActivationPage() {
       setIsActivating(true);
       setErrorMessage('');
       const result = await activateAdvisorMicrosite(danaparam);
+      cacheAdvisorForMicrosite(result);
       const targetUrl = result.micrositeUrl
         ? new URL(result.micrositeUrl).pathname
         : `/asesor/${result.advisorId}`;
 
-      navigate(`${targetUrl}?ref=${encodeURIComponent(danaparam)}`);
+      navigate(targetUrl);
     } catch (error) {
       console.error('Error activando microsite:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo activar el microsite.');
+      if (provisionData?.advisorId) {
+        cacheAdvisorForMicrosite(provisionData);
+        navigate(`/asesor/${provisionData.advisorId}`);
+        return;
+      }
+
+      setErrorMessage(error instanceof Error ? error.message : 'No se pudo abrir el microsite.');
     } finally {
       setIsActivating(false);
     }
@@ -206,11 +242,11 @@ export default function ActivationPage() {
           </div>
           
           <h1 className="text-3xl font-extrabold text-[#111827] md:text-4xl">
-            Activa tu perfil digital
+            Tu perfil digital está listo
           </h1>
           
           <p className="mt-3 text-lg text-[#6B7280]">
-            Revisa tu información y activa tu microsite para generar tu enlace permanente.
+            Revisa tu información y entra a tu microsite para guardar el enlace.
           </p>
         </div>
 
@@ -278,7 +314,7 @@ export default function ActivationPage() {
           {/* Acciones */}
           <div className="space-y-6">
             <div className="rounded-[28px] bg-white p-6 shadow-soft">
-              <h2 className="mb-4 text-xl font-bold text-[#111827]">Activación</h2>
+              <h2 className="mb-4 text-xl font-bold text-[#111827]">Acceso</h2>
               
               <div className="space-y-4">
                 <button
@@ -288,7 +324,7 @@ export default function ActivationPage() {
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  {isActivating ? 'Activando...' : 'Activar mi microsite'}
+                  {isActivating ? 'Preparando...' : 'Ir a mi microsite'}
                 </button>
 
                 {errorMessage && (
@@ -301,12 +337,12 @@ export default function ActivationPage() {
 
             {/* Bloque explicativo */}
             <div className="rounded-[28px] border border-[#E5E7EB] bg-white p-6">
-              <h3 className="mb-3 font-bold text-[#111827]">Al activar:</h3>
+              <h3 className="mb-3 font-bold text-[#111827]">Al continuar:</h3>
               
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Generaremos tu enlace permanente.</span>
+                  <span className="text-sm text-[#6B7280]">Abriremos tu enlace personalizado.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>

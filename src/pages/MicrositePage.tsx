@@ -44,6 +44,27 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
   };
 }
 
+function readCachedProvision(advisorId?: string) {
+  if (!advisorId) {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(`micrositeAdvisor:${advisorId}`);
+    return raw ? JSON.parse(raw) as { advisor?: ApiAdvisor } : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheProvision(advisorId: string | undefined, data: { advisor?: ApiAdvisor } | null) {
+  if (!advisorId || !data?.advisor) {
+    return;
+  }
+
+  window.localStorage.setItem(`micrositeAdvisor:${advisorId}`, JSON.stringify(data));
+}
+
 export default function MicrositePage() {
   const { advisorId } = useParams();
   const navigate = useNavigate();
@@ -85,6 +106,14 @@ export default function MicrositePage() {
       setAdvisorError('');
 
       try {
+        const cached = !dataRef ? readCachedProvision(advisorId) : null;
+        if (cached?.advisor) {
+          setAdvisor(toPageAdvisor(cached.advisor, fallbackAdvisor));
+          setAdvisorError('');
+          setIsLoadingAdvisor(false);
+          return;
+        }
+
         const result = dataRef
           ? await provisionAdvisor(dataRef)
           : await fetchAdvisorById(advisorId || '');
@@ -93,6 +122,7 @@ export default function MicrositePage() {
           const nextAdvisor = toPageAdvisor(result.advisor, fallbackAdvisor);
           setAdvisor(nextAdvisor);
           setAdvisorError('');
+          cacheProvision(result.advisorId || nextAdvisor.id, result);
 
           if (!advisorId && result.advisorId) {
             navigate(`/asesor/${result.advisorId}?ref=${encodeURIComponent(dataRef || '')}`, {
