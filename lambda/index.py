@@ -762,6 +762,24 @@ def mark_record_active(record, active):
     return next_record
 
 
+def advisor_sync_response(record, action, active, message, source=""):
+    body = {
+        "ok": True,
+        "message": message,
+        "type": "advisor_sync",
+        "action": action,
+        "advisorId": record.get("advisorId"),
+        "micrositeId": record.get("micrositeId"),
+        "micrositeUrl": record.get("micrositeUrl"),
+        "micrositeActivado": "SI" if active else "NO",
+    }
+
+    if source:
+        body["source"] = source
+
+    return response(200, body)
+
+
 def refresh_record_from_dana(record, fallback_advisor_id):
     if not DANA_REFRESH_ON_GET:
         return record, {
@@ -984,16 +1002,12 @@ def handle_advisor_sync(payload):
                 "MICROSITEACTIVADO": "NO",
             })
 
-        return response(200, {
-            "ok": True,
-            "message": "Microsite inactivado correctamente",
-            "type": "advisor_sync",
-            "action": action,
-            "micrositeActivado": "NO",
-            **record,
-            "persistence": persistence,
-            "trigger": trigger_result,
-        })
+        return advisor_sync_response(
+            record,
+            action,
+            False,
+            "Microsite inactivado correctamente",
+        )
 
     if danaparam and not has_direct_advisor_payload(payload):
         dana_data = fetch_dana_contact(danaparam)
@@ -1042,17 +1056,13 @@ def handle_advisor_sync(payload):
             DANA_MICROSITE_PARAM_FIELD: danaparam,
         })
 
-    return response(200, {
-        "ok": True,
-        "message": "Microsite sincronizado correctamente",
-        "type": "advisor_sync",
-        "action": action,
-        "source": source,
-        "micrositeActivado": "SI" if active else "NO",
-        **record,
-        "persistence": persistence,
-        "trigger": trigger_result,
-    })
+    return advisor_sync_response(
+        record,
+        action,
+        active,
+        "Microsite sincronizado correctamente",
+        source=source,
+    )
 
 
 def handle_get_advisor(query):
