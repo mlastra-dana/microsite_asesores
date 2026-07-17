@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -43,6 +44,7 @@ MICROSITE_BASE_URL = os.environ.get(
     "MICROSITE_BASE_URL",
     "https://main.d1w0srn8uz6n.amplifyapp.com",
 )
+MICROSITE_ID_SECRET = os.environ.get("MICROSITE_ID_SECRET", "")
 
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "")
 
@@ -469,7 +471,7 @@ def normalize_dana_response(data):
         products = ["Salud", "Auto", "Vitales"]
 
     advisor = {
-        "advisorId": str(microsite_id or advisor_id).strip(),
+        "advisorId": str(microsite_id).strip(),
         "internalAdvisorId": str(advisor_id).strip(),
         "name": first_value(name, default="Asesor de Seguros"),
         "email": email,
@@ -503,18 +505,37 @@ def stable_suffix(value):
     return hashlib.sha1(str(value).encode("utf-8")).hexdigest()[:6]
 
 
+def microsite_id_secret():
+    return MICROSITE_ID_SECRET or f"{MICROSITE_BASE_URL.rstrip('/')}|microsite-asesores"
+
+
+def generate_microsite_id(*values):
+    source = "|".join(str(value).strip() for value in values if str(value or "").strip())
+
+    if not source:
+        source = str(int(time.time() * 1000))
+
+    digest = hmac.new(
+        microsite_id_secret().encode("utf-8"),
+        source.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return digest[:16].upper()
+
+
 def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
     advisor = normalize_dana_response(dana_data)
 
-    advisor_id_from_dana = str(advisor.get("advisorId") or preferred_advisor_id or "").strip()
+    microsite_id_from_dana = str(advisor.get("advisorId") or "").strip()
+    internal_advisor_id = str(advisor.get("internalAdvisorId") or "").strip()
 
-    if advisor_id_from_dana:
-        advisor_id = advisor_id_from_dana
-        advisor["advisorId"] = advisor_id
-    else:
-        base_slug = slugify(advisor.get("name", "asesor"))
-        advisor_id = f"{base_slug}-{stable_suffix(dana_identifier)}"
-        advisor["advisorId"] = advisor_id
+    advisor_id = first_value(
+        microsite_id_from_dana,
+        preferred_advisor_id,
+        generate_microsite_id(internal_advisor_id, dana_identifier),
+    )
+    advisor["advisorId"] = advisor_id
 
     microsite_url = f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{advisor_id}"
 

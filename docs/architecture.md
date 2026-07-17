@@ -6,8 +6,8 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 
 1. La app en Amplify recibe una visita a una URL inicial del asesor.
 2. En la primera apertura, una Lambda en Python consulta la Data Retrieval API de DANAconnect para traer el registro del asesor desde la lista de contactos usando `danaparam`.
-3. La Lambda normaliza los datos y genera o resuelve una URL limpia por asesor.
-4. El usuario queda redirigido o resuelto hacia una URL limpia, por ejemplo `/asesor/2377`.
+3. La Lambda normaliza los datos y genera o resuelve un `MICROSITEID` opaco por asesor.
+4. El usuario activa su perfil y queda redirigido hacia una URL limpia, por ejemplo `/asesor/9F3806A23CEA5138`.
 5. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda y la Lambda trae los datos vigentes desde DANAconnect.
 6. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
 7. Para Apple se contempla generar `.pkpass`.
@@ -33,7 +33,7 @@ Eventos previstos:
 DANAconnect es la fuente principal para los datos del asesor. La lista de contactos `Microsite_asesores` debe tener, al menos estos codes:
 
 - `ADVISORID`: identificador interno del asesor.
-- `MICROSITEID`: identificador opaco usado en la URL publica.
+- `MICROSITEID`: identificador opaco usado en la URL publica. Puede cargarse vacio; la Lambda lo genera durante la activacion si no existe.
 - `MICROSITEURL`: enlace permanente del microsite.
 - `MICROSITEACTIVADO`: bandera `SI`/`NO` para continuar el flujo y enviar el segundo correo.
 - `NOMBREASESOR`
@@ -60,6 +60,8 @@ Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
 - `COTIZADOR_TRAVEL`
 - `COTIZADOR_CR`
 - `COTIZADOR_SALUD_PANAMA`
+
+El cliente debe cargar en DANA la informacion basica y las banderas de cotizadores. Nosotros generamos el `MICROSITEID` cuando el asesor activa su microsite, para no exponer el `ADVISORID` real en la URL publica.
 
 El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
 
@@ -94,5 +96,6 @@ La demo frontend debe seguir funcionando sin backend real. Si `VITE_API_URL` no 
 - `DANA_DATA_FIELDS`: campos a pedir a DANAconnect.
 - `DANA_FIELDS_QUERY_PARAM`: nombre del query parameter para pedir campos; por defecto `fields`.
 - `MICROSITE_BASE_URL`: dominio publico de Amplify o dominio custom.
+- `MICROSITE_ID_SECRET`: llave privada estable para generar `MICROSITEID` opacos cuando DANA no los trae.
 - `DYNAMODB_TABLE`: tabla donde guardar registros y eventos.
 - `CORS_ORIGIN`: origen permitido para el frontend.

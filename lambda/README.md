@@ -52,6 +52,7 @@ DANA_TRIGGER_URL=https://appserv.danaconnect.com/event/Trigger
 DANA_DATA_FIELDS=ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA
 DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
+MICROSITE_ID_SECRET=valor-largo-privado
 CORS_ORIGIN=*
 ```
 
@@ -61,7 +62,7 @@ El CSV de prueba para cargar en DANA esta en:
 
 `docs/dana-microsite-asesores-demo.csv`
 
-`ADVISORID` es el identificador interno del asesor. `MICROSITEID` es el identificador opaco que se usa en el enlace publico.
+`ADVISORID` es el identificador interno del asesor. No se expone en la URL publica. `MICROSITEID` es el identificador opaco que se usa en el enlace publico; si DANA lo envia vacio, la Lambda lo genera automaticamente con un hash firmado usando `MICROSITE_ID_SECRET`.
 
 Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que verá cada asesor.
 
@@ -74,6 +75,8 @@ MICROSITEACTIVADO=SI
 ```
 
 Ese Trigger permite que DANA continue el flujo y envie el segundo correo con el enlace permanente.
+
+Para produccion, `MICROSITE_ID_SECRET` debe ser una cadena privada y estable. Si se cambia despues de activar asesores, los nuevos IDs generados para registros sin `MICROSITEID` podrian cambiar. Los asesores ya activados conservan el `MICROSITEID` guardado en DANA.
 
 Opcional para guardar eventos del microsite, como cotizaciones o actualizaciones:
 
@@ -130,8 +133,8 @@ Respuesta esperada:
   "ok": true,
   "message": "Microsite provisionado correctamente",
   "type": "landing_provision",
-  "advisorId": "laura-lepage-a1b2c3",
-  "micrositeUrl": "https://tudominio.com/asesor/laura-lepage-a1b2c3",
+  "advisorId": "9F3806A23CEA5138",
+  "micrositeUrl": "https://tudominio.com/asesor/9F3806A23CEA5138",
   "advisor": {
     "name": "Laura Lepage",
     "email": "laura@example.com",
