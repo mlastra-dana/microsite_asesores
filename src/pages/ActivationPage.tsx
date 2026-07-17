@@ -310,7 +310,7 @@ export default function ActivationPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
-                  <span className="text-sm text-[#6B7280]">Recibirás un correo para guardarlo en tu teléfono.</span>
+                  <span className="text-sm text-[#6B7280]">Entrarás al microsite para guardar el enlace en tu teléfono.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
