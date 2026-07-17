@@ -36,7 +36,7 @@ DANA_TRIGGER_URL = os.environ.get("DANA_TRIGGER_URL", "https://appserv.danaconne
 DANA_MICROSITE_PARAM_FIELD = os.environ.get("DANA_MICROSITE_PARAM_FIELD", "danaParam")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
-    "ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
+    "ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
 )
 
 DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
@@ -469,12 +469,7 @@ def normalize_dana_response(data):
         extract_field(data, "CITY"),
         extract_field(data, "city"),
     )
-    advisor_code = first_value(
-        extract_field(data, "CodigoAsesor"),
-        extract_field(data, "CODIGOASESOR"),
-        extract_field(data, "ADVISOR_CODE"),
-        extract_field(data, "advisorCode"),
-    )
+    advisor_code = str(advisor_id).strip()
     role = "Asesor de Seguros"
     photo_url = first_value(
         extract_field(data, "FotoAsesor"),
@@ -557,25 +552,40 @@ def generate_microsite_id(*values):
     return digest[:16].upper()
 
 
+def generate_public_microsite_id(microsite_id, internal_advisor_id, dana_identifier):
+    return generate_microsite_id(
+        "public-url",
+        microsite_id,
+        internal_advisor_id,
+        dana_identifier,
+    )
+
+
 def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
     advisor = normalize_dana_response(dana_data)
 
     microsite_id_from_dana = str(advisor.get("advisorId") or "").strip()
     internal_advisor_id = str(advisor.get("internalAdvisorId") or "").strip()
 
-    advisor_id = first_value(
+    microsite_id = first_value(
         microsite_id_from_dana,
-        preferred_advisor_id,
         generate_microsite_id(internal_advisor_id, dana_identifier),
     )
-    advisor["advisorId"] = advisor_id
+    public_advisor_id = first_value(
+        preferred_advisor_id,
+        generate_public_microsite_id(microsite_id, internal_advisor_id, dana_identifier),
+    )
 
-    microsite_url = f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{advisor_id}"
+    advisor["advisorId"] = public_advisor_id
+    advisor["micrositeId"] = microsite_id
+
+    microsite_url = f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{public_advisor_id}"
 
     return {
-        "advisorId": advisor_id,
+        "advisorId": public_advisor_id,
+        "micrositeId": microsite_id,
         "danaIdentifier": str(dana_identifier),
-        "slug": advisor_id,
+        "slug": public_advisor_id,
         "micrositeUrl": microsite_url,
         "advisor": advisor,
         "source": "danaconnect",
@@ -786,7 +796,7 @@ def handle_microsite_activate(payload):
     record = create_advisor_record(danaparam, dana_data)
     persistence = save_record(record)
     trigger_result = trigger_dana_update(danaparam, {
-        "MICROSITEID": record["advisorId"],
+        "MICROSITEID": record["micrositeId"],
         "MICROSITEURL": record["micrositeUrl"],
         "MICROSITEACTIVADO": "SI",
         DANA_MICROSITE_PARAM_FIELD: danaparam,

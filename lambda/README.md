@@ -49,7 +49,7 @@ Recomendadas:
 ```bash
 DANA_BASE_URL=https://appserv.danaconnect.com
 DANA_TRIGGER_URL=https://appserv.danaconnect.com/event/Trigger
-DANA_DATA_FIELDS=ADVISORID,CODIGOASESOR,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA
+DANA_DATA_FIELDS=ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA
 DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 MICROSITE_ID_SECRET=valor-largo-privado
@@ -64,7 +64,13 @@ El CSV de prueba para cargar en DANA esta en:
 
 `docs/dana-microsite-asesores-demo.csv`
 
-`ADVISORID` es el identificador interno del asesor. No se expone en la URL publica. `MICROSITEID` es el identificador opaco que se usa en el enlace publico; si DANA lo envia vacio, la Lambda lo genera automaticamente con un hash firmado usando `MICROSITE_ID_SECRET`.
+`ADVISORID` es el identificador unico del asesor generado por Mercantil Seguros. Se muestra dentro del microsite como codigo del asesor, pero no se expone como identificador de la URL publica.
+
+`MICROSITEID` es el identificador interno del microsite guardado en DANA. Tampoco se expone directamente en la URL publica.
+
+La URL publica usa un `PUBLICID` derivado por HMAC a partir de `MICROSITEID`, `ADVISORID`, `danaIdentifier` y `MICROSITE_ID_SECRET`. La Lambda guarda ese `PUBLICID` como partition key `advisorId` en DynamoDB y escribe `MICROSITEURL` en DANA con ese valor enmascarado.
+
+Si DANA envia `MICROSITEID` vacio, la Lambda lo genera automaticamente con un hash firmado usando `MICROSITE_ID_SECRET`.
 
 Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que verá cada asesor.
 
@@ -76,6 +82,8 @@ MICROSITEURL
 MICROSITEACTIVADO=SI
 ```
 
+`MICROSITEID` queda como dato interno en DANA. `MICROSITEURL` queda como el enlace publico enmascarado, por ejemplo `/asesor/3A8F...`, y es el valor que debe usar el segundo correo.
+
 Ese Trigger permite que DANA continue el flujo y envie el segundo correo con el enlace permanente.
 
 Para produccion, `MICROSITE_ID_SECRET` debe ser una cadena privada y estable. Si se cambia despues de activar asesores, los nuevos IDs generados para registros sin `MICROSITEID` podrian cambiar. Los asesores ya activados conservan el `MICROSITEID` guardado en DANA.
@@ -86,7 +94,7 @@ Necesaria para resolver enlaces permanentes:
 DYNAMODB_TABLE=MicrositeAdvisors
 ```
 
-La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde al `MICROSITEID` publico. Durante el primer acceso desde DANA, la Lambda guarda el registro normalizado en DynamoDB junto con el `danaIdentifier`.
+La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde al `PUBLICID` publico, no al `MICROSITEID` interno. Durante el primer acceso desde DANA, la Lambda guarda el registro normalizado en DynamoDB junto con el `danaIdentifier` y el `micrositeId` interno.
 
 Luego `/asesor/{MICROSITEID}` funciona asi:
 
@@ -185,7 +193,7 @@ La Lambda resuelve ese identificador contra DynamoDB y devuelve:
     "name": "Maria Lastra",
     "email": "mlastra@danaconnect.com",
     "phone": "04142563325",
-    "advisorCode": "2897878",
+    "advisorCode": "24657722",
     "products": ["Cotizador Simplificado", "Vitales", "Auto", "Salud"]
   }
 }
