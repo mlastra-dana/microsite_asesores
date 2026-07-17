@@ -23,6 +23,12 @@ export default function ActivationPage() {
         return;
       }
 
+      if (/[{}$]/.test(danaparam)) {
+        setErrorMessage('El enlace no fue personalizado por DANA. El parámetro danaparam llegó como plantilla y no como valor real.');
+        setState('error');
+        return;
+      }
+
       try {
         setState('loading');
         const data = await provisionAdvisor(danaparam);
