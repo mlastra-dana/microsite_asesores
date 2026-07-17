@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AdvisorCard from '../components/AdvisorCard';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
@@ -46,6 +46,7 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
 
 export default function MicrositePage() {
   const { advisorId } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dataRef = searchParams.get('ref');
   const fallbackAdvisor = hasAdvisorById(advisorId) ? getAdvisorById(advisorId) : emptyAdvisor(advisorId);
@@ -58,7 +59,14 @@ export default function MicrositePage() {
     let isMounted = true;
 
     async function loadAdvisor() {
-      if (!advisorId || hasLocalAdvisor) {
+      if (!advisorId && !dataRef) {
+        setAdvisor(null);
+        setIsLoadingAdvisor(false);
+        setAdvisorError('El enlace no contiene la referencia necesaria para consultar DANAconnect.');
+        return;
+      }
+
+      if (advisorId && hasLocalAdvisor) {
         setAdvisor(fallbackAdvisor);
         setIsLoadingAdvisor(false);
         setAdvisorError('');
@@ -72,11 +80,18 @@ export default function MicrositePage() {
       try {
         const result = dataRef
           ? await provisionAdvisor(dataRef)
-          : await fetchAdvisorById(advisorId);
+          : await fetchAdvisorById(advisorId || '');
 
         if (isMounted && result?.advisor) {
-          setAdvisor(toPageAdvisor(result.advisor, fallbackAdvisor));
+          const nextAdvisor = toPageAdvisor(result.advisor, fallbackAdvisor);
+          setAdvisor(nextAdvisor);
           setAdvisorError('');
+
+          if (!advisorId && result.advisorId) {
+            navigate(`/asesor/${result.advisorId}?ref=${encodeURIComponent(dataRef || '')}`, {
+              replace: true,
+            });
+          }
         }
       } catch (error) {
         console.warn('No se pudo cargar el asesor desde DANA.', error);
@@ -96,7 +111,7 @@ export default function MicrositePage() {
     return () => {
       isMounted = false;
     };
-  }, [advisorId, dataRef, fallbackAdvisor, hasLocalAdvisor]);
+  }, [advisorId, dataRef, fallbackAdvisor, hasLocalAdvisor, navigate]);
 
   const visibleProducts = useMemo(() => {
     if (!advisor || !advisor.products.length) {

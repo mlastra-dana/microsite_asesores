@@ -14,6 +14,7 @@ export default function App() {
       <Route path="/login" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
       <Route path="/activar" element={<ActivationPage />} />
       <Route path="/provisionar" element={<ProvisionPage />} />
+      <Route path="/asesor" element={<MicrositePage />} />
       <Route path="/asesor/2377" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
       <Route path="/asesor/laura-lepage" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
       <Route path="/asesor/tuseguro" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
