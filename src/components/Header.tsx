@@ -1,7 +1,5 @@
-import { LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { Advisor } from '../data/advisors';
-import { logoutAdvisor } from '../utils/auth';
 import BrandLogo from './BrandLogo';
 
 type HeaderProps = {
@@ -9,13 +7,6 @@ type HeaderProps = {
 };
 
 export default function Header({ advisor }: HeaderProps) {
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    logoutAdvisor();
-    navigate('/login', { replace: true });
-  }
-
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3 sm:px-6">
@@ -33,14 +24,6 @@ export default function Header({ advisor }: HeaderProps) {
             >
               Actualizar datos
             </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 text-[#475467] transition hover:text-[#00478D]"
-            >
-              <LogOut size={17} />
-              Cerrar sesión
-            </button>
           </nav>
           <BrandLogo className="border-l border-slate-200 pl-7" />
         </div>
@@ -51,14 +34,6 @@ export default function Header({ advisor }: HeaderProps) {
           >
             Actualizar
           </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-[#475467]"
-            aria-label="Cerrar sesión"
-          >
-            <LogOut size={17} />
-          </button>
         </div>
       </div>
     </header>

@@ -7,6 +7,23 @@ import { getAdvisorById, hasAdvisorById, type Advisor } from '../data/advisors';
 import { products } from '../data/products';
 import { fetchAdvisorById, type Advisor as ApiAdvisor } from '../utils/api';
 
+function emptyAdvisor(id?: string): Advisor {
+  return {
+    id: id || '',
+    company: 'Mercantil Seguros',
+    name: '',
+    role: 'Asesor de Seguros',
+    email: '',
+    phone: '',
+    whatsapp: '',
+    city: '',
+    advisorCode: '',
+    photoUrl: '',
+    bio: '',
+    products: [],
+  };
+}
+
 function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
   return {
     ...fallback,
@@ -29,9 +46,9 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
 
 export default function MicrositePage() {
   const { advisorId } = useParams();
-  const fallbackAdvisor = getAdvisorById(advisorId);
+  const fallbackAdvisor = hasAdvisorById(advisorId) ? getAdvisorById(advisorId) : emptyAdvisor(advisorId);
   const hasLocalAdvisor = hasAdvisorById(advisorId);
-  const [advisor, setAdvisor] = useState(fallbackAdvisor);
+  const [advisor, setAdvisor] = useState<Advisor | null>(hasLocalAdvisor ? fallbackAdvisor : null);
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [advisorError, setAdvisorError] = useState('');
 
@@ -46,7 +63,7 @@ export default function MicrositePage() {
         return;
       }
 
-      setAdvisor(fallbackAdvisor);
+      setAdvisor(null);
       setIsLoadingAdvisor(true);
       setAdvisorError('');
 
@@ -55,10 +72,12 @@ export default function MicrositePage() {
 
         if (isMounted && result?.advisor) {
           setAdvisor(toPageAdvisor(result.advisor, fallbackAdvisor));
+          setAdvisorError('');
         }
       } catch (error) {
-        console.warn('No se pudo cargar el asesor desde DANA. Se usa fallback local.', error);
+        console.warn('No se pudo cargar el asesor desde DANA.', error);
         if (isMounted) {
+          setAdvisor(null);
           setAdvisorError(error instanceof Error ? error.message : 'No se pudo cargar el asesor desde DANA.');
         }
       } finally {
@@ -76,16 +95,20 @@ export default function MicrositePage() {
   }, [advisorId, fallbackAdvisor, hasLocalAdvisor]);
 
   const visibleProducts = useMemo(() => {
-    if (!advisor.products.length) {
+    if (!advisor || !advisor.products.length) {
       return products;
     }
 
     const selectedProducts = products.filter((product) => advisor.products.includes(product.title));
 
     return selectedProducts.length ? selectedProducts : products;
-  }, [advisor.products]);
+  }, [advisor]);
 
   function openAdvisorContact(subject: string) {
+    if (!advisor) {
+      return;
+    }
+
     if (advisor.contactUrl) {
       window.open(advisor.contactUrl, '_blank', 'noopener,noreferrer');
       return;
@@ -96,8 +119,27 @@ export default function MicrositePage() {
 
   return (
     <div className="min-h-screen bg-dana-cloud">
-      <Header advisor={advisor} />
+      {advisor && <Header advisor={advisor} />}
       <main>
+        {!advisor && (
+          <section className="flex min-h-screen items-center justify-center px-4 py-16">
+            <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl font-black text-red-500">
+                !
+              </div>
+              <h1 className="mt-5 text-2xl font-extrabold text-dana-ink">
+                No pudimos cargar este microsite
+              </h1>
+              <p className="mt-3 text-dana-muted">
+                {isLoadingAdvisor
+                  ? 'Estamos consultando la informacion del asesor en DANAconnect.'
+                  : advisorError || 'No encontramos informacion vigente para este enlace.'}
+              </p>
+            </div>
+          </section>
+        )}
+        {advisor && (
+          <>
         <div className="border-b border-slate-200 bg-white">
           <AdvisorCard advisor={advisor} />
         </div>
@@ -222,6 +264,8 @@ export default function MicrositePage() {
             </div>
           </div>
         </section>
+          </>
+        )}
       </main>
     </div>
   );

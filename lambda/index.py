@@ -550,6 +550,21 @@ def create_advisor_record(dana_identifier, dana_data, preferred_advisor_id=""):
     }
 
 
+def has_real_advisor_data(advisor):
+    if not isinstance(advisor, dict):
+        return False
+
+    name = str(advisor.get("name") or "").strip()
+
+    return any([
+        str(advisor.get("internalAdvisorId") or "").strip(),
+        str(advisor.get("email") or "").strip(),
+        str(advisor.get("phone") or "").strip(),
+        str(advisor.get("advisorCode") or "").strip(),
+        name and name != "Asesor de Seguros",
+    ])
+
+
 def dynamodb_table():
     if not DYNAMODB_TABLE or not boto3:
         return None
@@ -667,6 +682,14 @@ def handle_get_advisor(query):
 
     dana_data = fetch_dana_contact(advisor_id)
     record = create_advisor_record(advisor_id, dana_data, preferred_advisor_id=advisor_id)
+
+    if not has_real_advisor_data(record.get("advisor")):
+        return response(404, {
+            "ok": False,
+            "message": "No se encontro informacion del asesor en DANAconnect para este microsite.",
+            "type": "get_advisor",
+            "advisorId": advisor_id,
+        })
 
     return response(200, {
         "ok": True,
