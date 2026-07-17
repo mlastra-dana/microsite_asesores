@@ -14,7 +14,7 @@ export default function ActivationPage() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showDownloadToast, setShowDownloadToast] = useState(false);
 
-  const danaparam = searchParams.get('danaparam');
+  const danaparam = searchParams.get('dana') ?? searchParams.get('danaparam');
 
   useEffect(() => {
     const activateMicrosite = async () => {

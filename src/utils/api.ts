@@ -74,7 +74,7 @@ export async function provisionAdvisor(danaparam: string): Promise<ProvisionResp
   }
 
   try {
-    const response = await fetch(`${apiUrl}?danaparam=${encodeURIComponent(danaparam)}`, {
+    const response = await fetch(`${apiUrl}?dana=${encodeURIComponent(danaparam)}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

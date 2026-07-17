@@ -25,6 +25,8 @@ DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "https://auth.danaconnect.com/
 DANA_ACCESS_TOKEN = os.environ.get("DANA_ACCESS_TOKEN", "")
 DANA_CLIENT_ID = os.environ.get("DANA_CLIENT_ID", "")
 DANA_CLIENT_SECRET = os.environ.get("DANA_CLIENT_SECRET", "")
+DANA_USERNAME = os.environ.get("DANA_USERNAME", "")
+DANA_PASSWORD = os.environ.get("DANA_PASSWORD", "")
 DANA_OAUTH_SCOPE = os.environ.get("DANA_OAUTH_SCOPE", "")
 DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
 
@@ -161,25 +163,45 @@ def get_oauth_token():
     return access_token
 
 
+def dana_basic_authorization_header():
+    if not DANA_USERNAME or not DANA_PASSWORD:
+        return ""
+
+    credentials = f"{DANA_USERNAME}:{DANA_PASSWORD}"
+    encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
+    return f"Basic {encoded_credentials}"
+
+
+def use_dana_basic_auth():
+    return bool(DANA_USERNAME and DANA_PASSWORD)
+
+
 def dana_data_url(identifier):
     encoded_param = urllib.parse.quote(str(identifier), safe="")
+    query_param_name = "fields" if use_dana_basic_auth() else DANA_FIELDS_QUERY_PARAM
     query = urllib.parse.urlencode({
-        DANA_FIELDS_QUERY_PARAM: DANA_DATA_FIELDS
+        query_param_name: DANA_DATA_FIELDS
     })
 
-    return f"{DANA_BASE_URL.rstrip('/')}/api/2.0/rest/conversation/data/{encoded_param}?{query}"
+    api_version = "1.0" if use_dana_basic_auth() else "2.0"
+
+    return f"{DANA_BASE_URL.rstrip('/')}/api/{api_version}/rest/conversation/data/{encoded_param}?{query}"
 
 
 def fetch_dana_contact(identifier):
-    access_token = get_oauth_token()
     url = dana_data_url(identifier)
 
     print("Consultando DANAconnect URL:", url)
 
+    authorization_header = dana_basic_authorization_header()
+
+    if not authorization_header:
+        authorization_header = f"Bearer {get_oauth_token()}"
+
     request = urllib.request.Request(
         url,
         headers={
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": authorization_header,
             "Accept": "application/json",
         },
         method="GET",
@@ -504,7 +526,7 @@ def save_event(payload):
 
 
 def handle_landing_provision(payload):
-    danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("advisorId")
+    danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("dana") or payload.get("advisorId")
 
     if not danaparam:
         return response(400, {
@@ -628,7 +650,7 @@ def lambda_handler(event, context):
     if method == "GET":
         query = get_query_params(event)
 
-        danaparam = query.get("danaparam") or query.get("danaParam")
+        danaparam = query.get("danaparam") or query.get("danaParam") or query.get("dana")
         advisor_id = query.get("advisorId") or query.get("advisor_id")
 
         if danaparam:
@@ -662,8 +684,8 @@ def lambda_handler(event, context):
                 "ok": True,
                 "message": "Microsite Lambda activa",
                 "usage": {
-                    "landing_provision_get": "GET ?danaparam=VALOR_DANA_PARAM_REAL",
-                    "landing_provision_post": "POST { type: 'landing_provision', danaparam: 'VALOR_DANA_PARAM_REAL' }",
+                    "landing_provision_get": "GET ?dana=VALOR_DANA_PARAM_REAL",
+                    "landing_provision_post": "POST { type: 'landing_provision', dana: 'VALOR_DANA_PARAM_REAL' }",
                     "get_advisor": "GET ?advisorId=24657722",
                 },
             },

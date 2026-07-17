@@ -16,13 +16,20 @@ Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de 
 
 ## Variables de entorno
 
-Opcion A, token manual temporal:
+Opcion A, igual al proxy probado en otros proyectos, Basic Auth Data Retrieval v1:
+
+```bash
+DANA_USERNAME=usuario@companycode
+DANA_PASSWORD=...
+```
+
+Opcion B, token manual temporal:
 
 ```bash
 DANA_ACCESS_TOKEN=ey...
 ```
 
-Opcion B, recomendada, OAuth2 client credentials:
+Opcion C, OAuth2 client credentials:
 
 ```bash
 DANA_TOKEN_URL=https://...
@@ -46,6 +53,8 @@ DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 CORS_ORIGIN=*
 ```
+
+Si usas `DANA_USERNAME` y `DANA_PASSWORD`, la Lambda llama el endpoint v1 y usa `fields` automaticamente, aunque `DANA_FIELDS_QUERY_PARAM` quede en `fieldList`.
 
 El CSV de prueba para cargar en DANA esta en:
 
@@ -87,6 +96,12 @@ Puedes invocar por GET:
 
 ```bash
 curl -i "https://xxxxx.lambda-url.region.on.aws/?danaparam=123456"
+```
+
+Tambien puedes invocar con el nombre usado por DANA:
+
+```bash
+curl -i "https://xxxxx.lambda-url.region.on.aws/?dana=123456"
 ```
 
 O por POST:
