@@ -244,6 +244,14 @@ MICROSITEURL
 MICROSITEACTIVADO=SI
 ```
 
+Campos planos para mapear desde el response del nodo API:
+
+```bash
+MICROSITEID        $.micrositeId
+MICROSITEURL       $.micrositeUrl
+MICROSITEACTIVADO  $.micrositeActivado
+```
+
 Si el JSON trae `dana`, la Lambda tambien intenta escribir esos valores en DANA por `DANA_TRIGGER_URL`. Si no trae `dana`, DANA puede tomar esos valores de la respuesta del nodo API para actualizar su lista de contactos y enviar el correo con el enlace final.
 
 Inactivar usando `ADVISORID`:
