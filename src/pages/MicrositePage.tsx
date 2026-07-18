@@ -44,25 +44,20 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
   };
 }
 
-function readCachedProvision(advisorId?: string) {
-  if (!advisorId) {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(`micrositeAdvisor:${advisorId}`);
-    return raw ? JSON.parse(raw) as { advisor?: ApiAdvisor } : null;
-  } catch {
-    return null;
-  }
-}
-
 function cacheProvision(advisorId: string | undefined, data: { advisor?: ApiAdvisor } | null) {
   if (!advisorId || !data?.advisor) {
     return;
   }
 
   window.localStorage.setItem(`micrositeAdvisor:${advisorId}`, JSON.stringify(data));
+}
+
+function clearCachedProvision(advisorId: string | undefined) {
+  if (!advisorId) {
+    return;
+  }
+
+  window.localStorage.removeItem(`micrositeAdvisor:${advisorId}`);
 }
 
 export default function MicrositePage() {
@@ -97,10 +92,7 @@ export default function MicrositePage() {
         return;
       }
 
-      const cached = !dataRef ? readCachedProvision(advisorId) : null;
-      if (cached?.advisor) {
-        setAdvisor(toPageAdvisor(cached.advisor, fallbackAdvisor));
-      } else if (advisorId && hasLocalAdvisor) {
+      if (advisorId && hasLocalAdvisor) {
         setAdvisor(fallbackAdvisor);
       } else {
         setAdvisor(null);
@@ -130,6 +122,7 @@ export default function MicrositePage() {
       } catch (error) {
         console.warn('No se pudo cargar el asesor desde DANA.', error);
         if (isMounted) {
+          clearCachedProvision(advisorId);
           setAdvisor(null);
           setAdvisorError(error instanceof Error ? error.message : 'No se pudo cargar el asesor desde DANA.');
         }
