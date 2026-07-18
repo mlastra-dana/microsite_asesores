@@ -33,6 +33,23 @@ UPDATE
 
 La Lambda no escribe el campo `UPDATE`. Ese campo lo actualizan los nodos Update de DANA al final de cada rama del flujo.
 
+### Campos editables por el asesor
+
+El asesor nunca puede modificar `ADVISORID` desde el microsite.
+
+Los datos que puede proponer actualizar son solo campos de perfil/contacto:
+
+```text
+TELEFONOASESOR
+EMAILASESOR
+CIUDADASESOR
+WEBSITEASESOR
+CONTACTOASESOR
+BIOASESOR
+```
+
+Esas solicitudes no cambian directamente el dato productivo. Deben pasar por el proceso oficial definido por Mercantil/DANA antes de reflejarse en DANA y DynamoDB.
+
 ## Datos y ciclo de vida
 
 ### Baja de asesores
@@ -129,33 +146,29 @@ Propuesta actual:
 
 Registrar la solicitud como evento y enviarla al flujo que cliente defina. Los cambios visibles en el microsite deben entrar despues por el flujo oficial de DANA `UPDATE=ACTUALIZAR`.
 
-### Campos editables
+### Proceso oficial para publicar cambios
 
 Decision a confirmar:
 
-Que campos puede proponer actualizar el asesor desde el microsite.
+Como se procesaran las actualizaciones solicitadas por el asesor antes de reflejarse en el microsite.
 
 Por que importa:
 
-No todos los datos deben ser editables por el asesor. Por ejemplo, `ADVISORID` no debe modificarse desde el microsite porque es identificador unico de Mercantil.
+El microsite puede capturar una solicitud de cambio, pero no debe modificar directamente el dato productivo sin pasar por el sistema oficial de Mercantil/DANA. Hay que definir donde se recibe, valida y aprueba esa informacion.
 
 Propuesta actual:
 
-Permitir solo datos de perfil/contacto como telefono, email, ciudad, website, enlace de contacto y bio, sujeto a aprobacion del proceso oficial.
+Manejar una de estas dos opciones:
 
-### Aprobacion antes de publicar cambios
+1. Crear una lista de contactos en DANA para solicitudes de actualizacion del asesor.
+   Ahi se guardan los datos propuestos, la evidencia y el estado de revision. Luego un flujo aprobado actualiza la lista principal `Microsite_asesores` y ejecuta el nodo API `UPDATE=ACTUALIZAR`.
 
-Decision a confirmar:
+2. Consumir un servicio de Mercantil/banco para enviar la solicitud al sistema oficial donde viven los datos del asesor.
+   Cuando ese sistema confirme o aplique el cambio, DANA actualiza la lista principal y ejecuta el nodo API hacia la Lambda.
 
-Si una actualizacion solicitada por el asesor requiere aprobacion antes de reflejarse en DANA y DynamoDB.
+Regla propuesta:
 
-Por que importa:
-
-Si se publica automaticamente, el microsite podria mostrar informacion no validada. Si requiere aprobacion, hay que definir quien aprueba y donde queda esa evidencia.
-
-Propuesta actual:
-
-El asesor solicita cambios, pero el dato productivo se actualiza solo cuando DANA ejecuta el nodo API de actualizacion hacia la Lambda.
+El microsite solo registra la solicitud. El dato visible en produccion cambia cuando la fuente oficial actualiza DANA y el flujo `UPDATE=ACTUALIZAR` sincroniza DynamoDB.
 
 ## Seguridad y auditoria
 
@@ -163,15 +176,23 @@ El asesor solicita cambios, pero el dato productivo se actualiza solo cuando DAN
 
 Decision a confirmar:
 
-Por cuanto tiempo se deben guardar eventos operativos como solicitudes de cotizacion, solicitudes de actualizacion y desactivaciones.
+Si el proyecto debe guardar historico de eventos operativos, y por cuanto tiempo.
+
+Eventos posibles:
+
+- Solicitudes de cotizacion.
+- Solicitudes de actualizacion de datos.
+- Desactivaciones de microsites.
+- Respuestas de los nodos API de DANA.
+- Clicks en cotizadores, si cliente decide medirlos desde este sistema.
 
 Por que importa:
 
-Esto impacta auditoria, trazabilidad, privacidad y costos de almacenamiento.
+Si se requiere auditoria, reclamos o trazabilidad, estos eventos deben conservarse. Si no se requieren, guardar menos informacion reduce costos y exposicion de datos.
 
 Propuesta actual:
 
-Conservar eventos mientras cliente/auditoria define una politica formal de retencion. No aplicar borrado automatico en esta etapa.
+Guardar solo lo necesario para operar el flujo actual y conservar el snapshot del asesor en DynamoDB. No aplicar borrado automatico hasta que cliente/auditoria defina una politica formal de retencion.
 
 ### Enlace permanente publico
 
