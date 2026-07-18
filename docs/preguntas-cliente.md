@@ -134,15 +134,68 @@ El asesor puede volver a estar activo sin cambiar su enlace permanente. Esta reg
 
 Decision a confirmar:
 
-Como se agregaran productos/cotizadores nuevos en el futuro.
+Como se gestionara comercial y tecnicamente el alta de productos/cotizadores nuevos.
 
 Por que importa:
 
-Hoy cada producto tiene campos especificos en DANA para habilitarlo y para guardar su URL. Si aparece un producto nuevo, hay que definir si se crean nuevos campos en la lista de contactos, si existe una configuracion global de productos o si el modelo debe soportar una lista dinamica por asesor.
+Hoy cada producto tiene campos especificos en DANA para habilitarlo y para guardar su URL. En seguros, este cambio probablemente no sera frecuente, por lo que el modelo actual puede ser suficiente para el primer alcance. Aun asi, si aparece un producto nuevo, hay un impacto tecnico y operativo que debe estar claro:
+
+- Crear campos nuevos en DANA.
+- Agregar esos campos al JSON de los nodos API.
+- Ajustar la Lambda para reconocer el producto.
+- Ajustar el frontend para mostrarlo con nombre, descripcion, icono y URL.
+
+Ese esfuerzo puede tratarse como una solicitud de servicio/evolutivo, coordinada por la KAM con cliente y equipo tecnico.
 
 Propuesta actual:
 
-Para esta etapa, mantener campos explicitos por producto en DANA porque es mas simple de operar y auditar. Si el catalogo crece frecuentemente, proponer una segunda etapa con modelo dinamico de productos.
+Para esta etapa, mantener campos explicitos por producto en DANA porque es mas simple de operar, probar y auditar con el segmento inicial.
+
+Si Mercantil solicita agregar un producto nuevo, se debe evaluar como cambio de alcance: crear campos en DANA, ajustar nodos, actualizar Lambda/frontend y validar el flujo end to end. Comercialmente, esta solicitud puede convertirse en un servicio adicional definido por KAM/cliente.
+
+Guia tecnica si el catalogo empieza a cambiar con frecuencia:
+
+Pasar a un modelo dinamico donde DANA envie a la Lambda una lista de cotizadores por asesor, en vez de un par de campos por cada producto.
+
+Ejemplo conceptual:
+
+```json
+{
+  "productos": [
+    {
+      "codigo": "AUTO",
+      "nombre": "Auto",
+      "habilitado": "SI",
+      "url": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+      "orden": 1
+    },
+    {
+      "codigo": "SALUD",
+      "nombre": "Salud",
+      "habilitado": "SI",
+      "url": "https://link.mercantilseguros.com/Salud_ADS_91827463",
+      "orden": 2
+    }
+  ]
+}
+```
+
+Con ese modelo, agregar un producto nuevo seria una tarea operativa en DANA/catalogo, no un cambio de codigo.
+
+Opciones para implementar ese modelo:
+
+1. Campo estructurado en la lista principal de asesores, por ejemplo `COTIZADORES_JSON`.
+   DANA guarda ahi la lista de productos habilitados para ese asesor.
+
+2. Lista/catalogo adicional en DANA.
+   Una lista define productos globales y otra relaciona asesor + producto + URL. Un flujo de DANA arma el JSON final y lo envia a la Lambda.
+
+3. Servicio externo de Mercantil.
+   Mercantil expone el catalogo y la relacion asesor-producto; DANA consume o sincroniza esa informacion y luego llama la Lambda.
+
+Impacto:
+
+El modelo actual queda aprobado para pruebas y primer segmento. La decision abierta es si un alta de producto se manejara como solicitud puntual de servicio o si mas adelante conviene migrar a un catalogo dinamico.
 
 ### Registro de clicks
 

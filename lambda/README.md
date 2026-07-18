@@ -86,6 +86,17 @@ Si DANA envia `MICROSITEID` vacio, la Lambda lo genera automaticamente con un ha
 
 Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que vera cada asesor. Cada cotizador habilitado tambien debe tener su campo `COTIZADOR_*_URL` en el registro de ese asesor; si viene en `SI` sin URL, el frontend no lo muestra.
 
+Este modelo de cotizadores con campos fijos es el alcance actual del piloto/primer segmento. Como se trata de productos de seguros, es razonable asumir que el catalogo no cambiara todos los dias. Si Mercantil agrega un producto nuevo, puede manejarse como una solicitud de servicio/evolutivo: crear campos en DANA, ajustar nodos API, actualizar Lambda/frontend y validar el flujo.
+
+Plan recomendado solo si el catalogo empieza a cambiar con frecuencia:
+
+1. DANA mantiene un catalogo dinamico de cotizadores.
+2. El flujo de DANA envia a la Lambda una lista de productos por asesor, por ejemplo `COTIZADORES_JSON`.
+3. La Lambda guarda esa lista como snapshot en DynamoDB.
+4. El frontend renderiza los productos recibidos sin depender de un mapeo fijo por codigo.
+
+Con ese modelo, agregar un producto nuevo seria una configuracion en DANA/catalogo y no requeriria despliegue de Lambda o frontend, salvo que se necesite un componente visual completamente nuevo. Esta decision puede quedar como punto comercial/operativo para la KAM y cliente.
+
 Si el request incluye `dana`, la Lambda puede llamar `DANA_TRIGGER_URL` para actualizar:
 
 ```bash

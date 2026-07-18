@@ -258,6 +258,90 @@ COTIZADOR_AUTO = NO/vacio -> COTIZADOR_AUTO_URL puede quedar vacio.
 
 El frontend muestra solo los cotizadores habilitados por bandera `SI` que tambien tengan URL. Si un cotizador viene en `SI` pero su campo `COTIZADOR_*_URL` esta vacio, se considera configuracion incompleta y no se muestra.
 
+## Alta de productos nuevos
+
+### Modelo actual
+
+En el piloto/primer segmento, cada producto tiene campos fijos en DANA:
+
+```text
+COTIZADOR_PRODUCTO
+COTIZADOR_PRODUCTO_URL
+```
+
+Este modelo es facil de auditar para un segmento pequeno y es razonable si el catalogo de seguros no cambia con frecuencia. Si se agrega un producto nuevo, debe tratarse como una solicitud de servicio/evolutivo porque hoy habria que:
+
+- Crear los campos nuevos en DANA.
+- Agregar esos campos al POST generar.
+- Agregar esos campos al POST actualizar.
+- Agregar esos campos a `DANA_DATA_FIELDS` si se usa Data Retrieval.
+- Agregar el producto al mapeo de la Lambda.
+- Agregar el producto/catalogo visual en el frontend.
+
+Por eso, si Mercantil espera agregar productos con frecuencia, conviene evaluar el modelo dinamico descrito abajo. Si el cambio es ocasional, el modelo actual puede mantenerse y el alta de producto se atiende como cambio controlado.
+
+### Modelo recomendado si el catalogo cambia frecuentemente
+
+Mover los cotizadores a un modelo dinamico controlado por DANA.
+
+La idea es que DANA envie una lista de productos habilitados por asesor, por ejemplo en un campo `COTIZADORES_JSON` o armada desde una lista/catalogo adicional:
+
+```json
+{
+  "COTIZADORES": [
+    {
+      "codigo": "AUTO",
+      "nombre": "Auto",
+      "habilitado": "SI",
+      "url": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+      "orden": 1
+    },
+    {
+      "codigo": "SALUD",
+      "nombre": "Salud",
+      "habilitado": "SI",
+      "url": "https://link.mercantilseguros.com/Salud_ADS_91827463",
+      "orden": 2
+    }
+  ]
+}
+```
+
+Con ese modelo:
+
+- DANA sigue siendo el cerebro operativo.
+- El frontend renderiza cualquier producto recibido sin necesitar campos nuevos por producto.
+- La Lambda guarda el snapshot de productos en DynamoDB.
+- Agregar un producto nuevo se vuelve una configuracion en DANA/catalogo, no un despliegue de codigo.
+
+Decision pendiente:
+
+Definir si el alta de productos sera una solicitud puntual de servicio o si el catalogo dinamico vivira como `COTIZADORES_JSON` dentro del registro del asesor, como una lista adicional en DANA o como un servicio oficial de Mercantil.
+
+## Estructura del CSV de carga
+
+El CSV de carga para DANA debe conservar exactamente los mismos nombres de columnas y el mismo orden para que el mapeo automatico funcione.
+
+Archivo de referencia en el proyecto:
+
+```text
+docs/dana-microsite-asesores-demo.csv
+```
+
+Cabecera esperada:
+
+```csv
+UID,NombreAsesor ,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,MicrositeID,MicrositeURL,CiudadAsesor,BioAsesor,WebsiteAsesor,ContactoAsesor,Cotizador_simplificado,Cotizador_simplificado_url,Cotizador_vitales,Cotizador_vitales_url,Cotizador_auto,cotizador_auto_url,Cotizador_salud,Cotizador_salud_url,Cotizador_emergencias_medicas,Cotizador_emergencias_medicas_url,Cotizador_platino,Cotizador_platino_url,Cotizador_travel,Cotizador_travel_url,Cotizador_CR,Cotizador_CR_url,Cotizador_Salud_Panama,Cotizador_salud_panama_url,response_microsite,response_actualizacion,response_baja,Micrositeactivado
+```
+
+Notas importantes:
+
+- `NombreAsesor ` tiene un espacio al final en la estructura actual. Debe conservarse mientras DANA lo tenga asi, porque si cambia el header puede fallar el automapeo.
+- En registros nuevos para generar, deben venir vacios `Update`, `MicrositeID`, `MicrositeURL`, `response_microsite`, `response_actualizacion`, `response_baja` y `Micrositeactivado`.
+- El nodo API de generar devuelve `micrositeId` y `micrositeUrl`; el nodo Update de DANA los escribe en `MicrositeID` y `MicrositeURL`.
+- En actualizaciones, `MicrositeID` y `MicrositeURL` ya deben venir poblados y no deben reescribirse desde el nodo Update.
+- En desactivaciones, no se borran `MicrositeID` ni `MicrositeURL`; solo se marca el estado operativo y se guarda el response.
+
 ## Reglas de negocio cerradas
 
 ```text
