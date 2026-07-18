@@ -318,6 +318,89 @@ Decision pendiente:
 
 Definir si el alta de productos sera una solicitud puntual de servicio o si el catalogo dinamico vivira como `COTIZADORES_JSON` dentro del registro del asesor, como una lista adicional en DANA o como un servicio oficial de Mercantil.
 
+## Registro de clicks en cotizadores
+
+Este punto queda como alternativa tecnica para validar con KAM/DANA. El objetivo es que DANA conserve la medicion de clicks por asesor y producto.
+
+### Opcion A: links trackeables de DANA
+
+En esta opcion, los campos `COTIZADOR_*_URL` contienen URLs administradas por DANA. El frontend abre esa URL y DANA registra el click antes de redirigir al cotizador final.
+
+```text
+Usuario hace click
+Frontend abre COTIZADOR_*_URL
+DANA registra click
+DANA redirige al cotizador final
+```
+
+Pendiente de validar:
+
+- Si DANA puede generar links trackeables para enlaces usados desde un microsite externo.
+- Como se consultan esos clicks por asesor/producto.
+- Si el link trackeable puede conservar parametros del asesor y del producto.
+
+### Opcion B: Lambda envia evento de click a DANA
+
+En esta opcion, el frontend llama primero a la Lambda. La Lambda registra el evento en DANA y luego devuelve la URL final para abrir el cotizador.
+
+```text
+Usuario hace click
+Frontend -> Lambda: quote_click
+Lambda -> DANA Conversation API: start/data
+DANA crea registro/flujo de click
+Lambda -> Frontend: redirectUrl
+Frontend abre cotizador final
+```
+
+Endpoint candidato de DANA:
+
+```text
+POST /api/2.0/rest/conversation/{conversationId}/start/data
+```
+
+Uso esperado:
+
+- Crear en DANA un flujo/lista para clicks, por ejemplo `Microsite_cotizador_clicks`.
+- Obtener el `conversationId` de ese flujo.
+- La Lambda llama `start/data` con los datos del click.
+- El flujo de DANA puede ser minimo: recibir datos, guardar el registro y cerrar con un nodo Update si se necesita marcar estado.
+
+Campos sugeridos para la lista/flujo de clicks:
+
+```text
+ADVISORID
+MICROSITEID
+MICROSITEURL
+PUBLICID
+NOMBREASESOR
+PRODUCTO
+COTIZADOR_URL
+CLICK_AT
+SOURCE
+USER_AGENT
+```
+
+JSON conceptual que la Lambda enviaria a DANA:
+
+```json
+{
+  "ADVISORID": "91827463",
+  "MICROSITEID": "ABC123",
+  "MICROSITEURL": "https://main.d1w0srn8uz6n.amplifyapp.com/asesor/270C3E56BBA225E9",
+  "PUBLICID": "270C3E56BBA225E9",
+  "NOMBREASESOR": "Daniela Rivero",
+  "PRODUCTO": "Auto",
+  "COTIZADOR_URL": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+  "CLICK_AT": "2026-07-18T10:30:00Z",
+  "SOURCE": "microsite",
+  "USER_AGENT": "browser"
+}
+```
+
+Decision pendiente:
+
+Validar si conviene operar una segunda lista/flujo en DANA para clicks o si DANA puede resolverlo con links trackeables.
+
 ## Estructura del CSV de carga
 
 El CSV de carga para DANA debe conservar exactamente los mismos nombres de columnas y el mismo orden para que el mapeo automatico funcione.
