@@ -1,6 +1,6 @@
 # Lambda para microsites de asesores
 
-Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de DANAconnect y responde con JSON. Para el microsite, DANAconnect es la fuente principal de datos del asesor.
+Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de DANAconnect y responde con JSON. Para el microsite, DANAconnect es la fuente principal de datos del asesor. Su nombre es: microsite_asesores
 
 ## Crear la Lambda
 
