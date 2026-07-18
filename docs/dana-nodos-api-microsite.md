@@ -100,12 +100,21 @@ Este request usa los valores actuales de `MICROSITEID` y `MICROSITEURL` que ya g
 ## 2. UPDATE actualizar
 
 ```text
-MICROSITEID        $.micrositeId
-MICROSITEURL       $.micrositeUrl
 MICROSITEACTIVADO  $.micrositeActivado
 RESPONSE_MICROSITE $.message
 UPDATE             ACTUALIZADO
 ```
+
+En actualizacion no reescribas `MICROSITEID` ni `MICROSITEURL`; esos valores ya existen en DANA y deben permanecer estables. La Lambda los devuelve solo como confirmacion.
+
+Si no hay diferencias entre lo que envia DANA y lo que ya esta en DynamoDB, la Lambda responde `200 OK` con:
+
+```text
+RESPONSE_MICROSITE Microsite sin cambios para actualizar
+UPDATE             ACTUALIZADO
+```
+
+Esto permite que el flujo avance y no quede detenido en `UPDATE=ACTUALIZAR`.
 
 ## 3. POST inactivar
 

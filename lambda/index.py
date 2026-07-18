@@ -780,6 +780,32 @@ def advisor_sync_response(record, action, active, message, source=""):
     return response(200, body)
 
 
+def comparable_record(record):
+    advisor = record.get("advisor") if isinstance(record, dict) else {}
+
+    return {
+        "micrositeId": record.get("micrositeId"),
+        "micrositeUrl": record.get("micrositeUrl"),
+        "micrositeActive": bool(record.get("micrositeActive", True)),
+        "advisor": {
+            "internalAdvisorId": advisor.get("internalAdvisorId"),
+            "name": advisor.get("name"),
+            "email": advisor.get("email"),
+            "phone": advisor.get("phone"),
+            "whatsapp": advisor.get("whatsapp"),
+            "city": advisor.get("city"),
+            "advisorCode": advisor.get("advisorCode"),
+            "role": advisor.get("role"),
+            "photoUrl": advisor.get("photoUrl"),
+            "bio": advisor.get("bio"),
+            "website": advisor.get("website"),
+            "contactUrl": advisor.get("contactUrl"),
+            "products": advisor.get("products") or [],
+            "micrositeActive": bool(advisor.get("micrositeActive", True)),
+        },
+    }
+
+
 def refresh_record_from_dana(record, fallback_advisor_id):
     if not DANA_REFRESH_ON_GET:
         return record, {
@@ -1045,6 +1071,18 @@ def handle_advisor_sync(payload):
     active_payload = first_value(payload.get("micrositeActive"), payload.get("MICROSITEACTIVADO"))
     active = bool(record.get("micrositeActive", True)) if active_payload == "" else not is_disabled(active_payload)
     record = mark_record_active(record, active)
+
+    saved_record = get_saved_record(record.get("advisorId"))
+
+    if saved_record and comparable_record(saved_record) == comparable_record(record):
+        return advisor_sync_response(
+            record,
+            action,
+            active,
+            "Microsite sin cambios para actualizar",
+            source=source,
+        )
+
     persistence = save_record(record)
     trigger_result = None
 
