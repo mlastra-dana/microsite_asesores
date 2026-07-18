@@ -1,6 +1,10 @@
 # Lambda para microsites de asesores
 
-Esta Lambda recibe solicitudes del microsite, consulta la Data Retrieval API de DANAconnect y responde con JSON. Para el microsite, DANAconnect es la fuente principal de datos del asesor. Su nombre es: microsite_asesores
+Esta Lambda sincroniza los microsites de asesores entre DANAconnect, DynamoDB y el frontend publicado en Amplify.
+
+El flujo recomendado para producto es que DANAconnect envie los datos del asesor por nodos API (`advisor_sync`). La Lambda guarda un snapshot normalizado en DynamoDB y el frontend consulta ese snapshot por el `PUBLICID` de la URL.
+
+La Data Retrieval API se mantiene como compatibilidad para escenarios donde exista un `danaparam`, pero no es la base del flujo productivo actual.
 
 ## Crear la Lambda
 
@@ -60,6 +64,14 @@ CORS_ORIGIN=*
 
 Si usas `DANA_USERNAME` y `DANA_PASSWORD`, la Lambda llama el endpoint v1 y usa `fields` automaticamente, aunque `DANA_FIELDS_QUERY_PARAM` quede en `fieldList`.
 
+Para el flujo productivo actual se recomienda:
+
+```bash
+DANA_REFRESH_ON_GET=false
+```
+
+Con eso, cada visita al microsite carga desde DynamoDB. Las actualizaciones llegan desde DANA por POST a `advisor_sync`.
+
 El CSV de prueba para cargar en DANA esta en:
 
 `docs/dana-microsite-asesores-demo.csv`
@@ -74,13 +86,15 @@ Si DANA envia `MICROSITEID` vacio, la Lambda lo genera automaticamente con un ha
 
 Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que verá cada asesor.
 
-Durante la activacion la Lambda llama `DANA_TRIGGER_URL` para actualizar:
+Si el request incluye `dana`, la Lambda puede llamar `DANA_TRIGGER_URL` para actualizar:
 
 ```bash
 MICROSITEID
 MICROSITEURL
 MICROSITEACTIVADO=SI
 ```
+
+En el flujo actual, DANA tambien puede tomar esos valores directamente del response del nodo API y escribirlos con un nodo Update.
 
 `MICROSITEID` queda como dato interno en DANA. `MICROSITEURL` queda como el enlace publico enmascarado, por ejemplo `/asesor/3A8F...`, y es el valor que debe usar el correo con el enlace permanente.
 
@@ -105,7 +119,7 @@ Luego `/asesor/{PUBLICID}` funciona asi:
 
 `DANA_REFRESH_MIN_SECONDS` queda disponible solo si se necesita habilitar `refresh=true` como herramienta operativa o de diagnostico.
 
-## Data Retrieval API usada
+## Data Retrieval API usada como compatibilidad
 
 La Lambda llama:
 
@@ -288,7 +302,7 @@ En AWS Amplify, agrega una variable de entorno:
 VITE_API_URL=https://xxxxx.lambda-url.region.on.aws/
 ```
 
-Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda los eventos en `localStorage` para que la demo funcione sin backend.
+Luego vuelve a desplegar la app. En ambientes conectados, `VITE_API_URL` debe existir y apuntar a la Lambda. Si no existe, el frontend solo conserva eventos en `localStorage` para pruebas locales de interfaz.
 
 ## Eventos soportados
 
@@ -296,25 +310,26 @@ Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda
 
 `advisor_update`: solicitud del asesor para actualizar sus datos.
 
-`pass_request`: solicitud para generar carnet Apple `.pkpass` o pase Android.
-
 `landing_provision`: provisionamiento del microsite desde Data Retrieval API o DANAconnect.
 
 `advisor_sync`: sincronizacion operativa desde DANAconnect para altas, actualizaciones e inactivaciones.
 
-## Roadmap backend
+## Alcance actual
 
-El backend definitivo se mantiene en Python. La Lambda puede evolucionar para:
+La Lambda en esta etapa cubre:
 
-- Consultar DANAconnect y traer el registro del asesor.
-- Resolver una URL canonica por asesor.
-- Crear o solicitar archivos `.pkpass` para Apple Wallet.
-- Crear un pase compatible con Android Wallet.
-- Enviar eventos a DANAconnect o EventBridge.
+- Sincronizar altas, actualizaciones e inactivaciones desde nodos API de DANA.
+- Generar o conservar `MICROSITEID`.
+- Generar `PUBLICID` enmascarado para la URL publica.
+- Guardar el snapshot normalizado en DynamoDB.
+- Responder datos del asesor activo al frontend.
+- Bloquear microsites inactivos con respuesta `410`.
+
+Los temas no cerrados con cliente/auditoria estan documentados en `docs/preguntas-cliente.md`. Ese documento incluye la decision pendiente, por que importa y la propuesta actual.
 
 ## Recursos AWS necesarios
 
-Minimo para demo conectada a DANAconnect:
+Minimo para ambiente conectado a DANAconnect:
 
 - AWS Lambda con runtime Python 3.12.
 - Lambda Function URL o API Gateway.

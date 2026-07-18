@@ -159,10 +159,10 @@ export async function activateAdvisorMicrosite(danaparam: string): Promise<Provi
 
 /**
  * Función de compatibilidad para mantener el código existente.
- * Envía un evento simple a la Lambda (quote_request, advisor_update, pass_request).
+ * Envía un evento simple a la Lambda (quote_request, advisor_update).
  */
 export async function sendMicrositeEvent(payload: {
-  type: 'quote_request' | 'advisor_update' | 'pass_request';
+  type: 'quote_request' | 'advisor_update';
   advisorId: string;
   [key: string]: any;
 }) {

@@ -1,8 +1,25 @@
 # Microsite para asesores de seguros
 
-Demo comercial en React + TailwindCSS para generar microsites personalizados de asesores/corredores de seguros. Incluye perfil profesional, WhatsApp, descarga vCard, carnet digital con QR visual, catalogo de productos, solicitud de cotizacion y formulario para actualizacion de datos del asesor.
+Aplicacion React + TailwindCSS para publicar microsites personalizados de asesores de Mercantil Seguros.
 
-La direccion tecnica del producto esta documentada en `docs/architecture.md`: Amplify conectado a DANAconnect/Data Retrieval API, Lambda en Python, DynamoDB, URL limpia, pass wallet/pkpass y acceso del asesor por OTP.
+El flujo productivo actual usa DANAconnect como fuente operativa de datos, AWS Lambda como capa de sincronizacion y DynamoDB como snapshot de lectura para que cada enlace permanente cargue en cualquier navegador.
+
+## Flujo validado
+
+1. DANAconnect mantiene la lista de contactos `Microsite_asesores`.
+2. Un flujo de DANA ejecuta uno de tres nodos API: generar, actualizar o desactivar.
+3. El nodo API llama la Lambda con `type=advisor_sync`.
+4. La Lambda normaliza los datos, genera o conserva identificadores y guarda el snapshot en DynamoDB.
+5. La Lambda responde campos planos para que DANA los guarde con nodos Update.
+6. El asesor recibe o conserva su URL permanente `MICROSITEURL`.
+7. El frontend consulta la Lambda por `PUBLICID` y muestra el microsite solo si esta activo.
+
+## Documentacion principal
+
+- `docs/dana-nodos-api-microsite.md`: contrato operativo de nodos DANA, JSONs y response mapping.
+- `docs/architecture.md`: direccion tecnica y reglas de negocio acordadas.
+- `docs/preguntas-cliente.md`: preguntas abiertas para cliente/auditoria.
+- `lambda/README.md`: variables de entorno, endpoints y permisos de AWS.
 
 ## Instalar y correr
 
@@ -12,103 +29,71 @@ npm run dev
 npm run build
 ```
 
-## Rutas demo
-
-- `/provisionar?danaparam=abc123-def456-ghi789`
-- `/asesor/2377`
-- `/asesor/carlos-mendoza`
-- `/asesor/valentina-rojas`
-- `/asesor/2377/actualizar`
-
-Si el `advisorId` no existe, la app muestra los datos demo de TuSeguro.com.
-
-La ruta `/provisionar` es la URL inicial para usar desde DANAconnect. Recibe `danaparam`, llama la Lambda y redirige al microsite limpio que devuelve el backend.
-
 ## AWS Amplify
 
 Configuracion de build:
 
-- Build command: `npm run build`
-- Output directory: `dist`
+```text
+Build command: npm run build
+Output directory: dist
+```
 
-Variable opcional:
+Variable requerida:
 
 ```bash
 VITE_API_URL=https://cgqoxs2wgjcadbdm2xv7rkbevi0dqyfr.lambda-url.us-east-1.on.aws/
 ```
 
-Si `VITE_API_URL` no esta configurada, las solicitudes de cotizacion y actualizacion se guardan en `localStorage` para mantener la demo funcional sin backend.
+## Backend
 
-## Lambda incluida
+La Lambda esta en `lambda/index.py`.
 
-El backend simulado esta en `lambda/index.py`. Puedes crear una Lambda en AWS con runtime Python 3.12, copiar ese codigo y exponerla con Function URL o API Gateway. El README especifico esta en `lambda/README.md`.
+Eventos relevantes:
 
-La Lambda soporta:
+- `advisor_sync`: alta, actualizacion e inactivacion desde nodos API de DANA.
+- `get_advisor`: lectura del microsite desde DynamoDB.
+- `quote_request`: solicitud de cotizacion.
+- `advisor_update`: solicitud de actualizacion de datos.
 
-- `quote_request`
-- `advisor_update`
-- `pass_request`
-- `landing_provision`
-- `otp_request`
-- `otp_verify`
+## Decisiones de negocio cerradas
 
-Por ahora imprime el evento en logs y devuelve una respuesta exitosa. En un entorno real, ahi se podria guardar en DynamoDB, disparar una automatizacion o enviar el evento a DANAconnect.
+- DANAconnect es la fuente operativa. Los datos se cargan o actualizan en la lista de contactos de DANA.
+- El microsite publico carga desde DynamoDB, no consulta DANA en cada visita.
+- `ADVISORID` lo provee siempre Mercantil Seguros y se trata como identificador unico del asesor.
+- La URL publica no expone `ADVISORID` ni `MICROSITEID`; usa un `PUBLICID` enmascarado.
+- Las altas, actualizaciones e inactivaciones se ejecutan desde flujos de DANA con nodos API.
+- El campo `UPDATE` lo escriben los nodos Update de DANA, no la Lambda.
+- No hay borrado automatico de registros en DynamoDB; la baja se maneja marcando el microsite como inactivo.
 
+## Identificadores
 
-## Flujo de activación DANAconnect
+- `ADVISORID`: codigo unico del asesor generado por Mercantil Seguros. Puede mostrarse dentro del microsite.
+- `MICROSITEID`: identificador interno guardado en DANA. No se expone en la URL publica.
+- `advisorId` en Lambda/Dynamo: `PUBLICID` enmascarado usado en `/asesor/{PUBLICID}`.
+- `MICROSITEURL`: enlace permanente publico que se guarda en DANA y se envia al asesor.
 
-### 1. Link en correo de DANAconnect
-DANAconnect envía un correo al asesor con un botón que contiene el siguiente link:
+## Estados
 
-```
-https://main.d1w0srn8uz6n.amplifyapp.com/activar?danaparam=$f{dana}
-```
+```text
+Nuevo pendiente:
+  MICROSITEACTIVADO vacio
+  UPDATE vacio
 
-Cuando el asesor hace click, DANAconnect reemplaza `$f{dana}` por un identificador interno real (danaparam), que es el identificador usado para la Data Retrieval API.
+Generado:
+  MICROSITEACTIVADO SI
+  UPDATE GENERADO
 
-### 2. Variable de entorno necesaria
-La aplicación necesita la siguiente variable de entorno configurada en AWS Amplify:
+Actualizado:
+  MICROSITEACTIVADO SI
+  UPDATE ACTUALIZADO
 
-```
-VITE_API_URL=https://URL-DE-LAMBDA-FUNCTION-URL
-```
-
-### 3. Flujo de la ruta `/activar`
-
-1. **Lectura del parámetro**: La ruta `/activar` lee el query parameter `danaparam` de la URL.
-2. **Validación**: Si no existe `danaparam`, muestra una pantalla de error amigable.
-3. **Consulta a Lambda**: Si existe `danaparam`, muestra un estado de carga y llama a la Lambda mediante:
-   ```
-   GET ${VITE_API_URL}?danaparam=${encodeURIComponent(danaparam)}
-   ```
-4. **Respuesta de Lambda**: La Lambda debe responder con un JSON que contiene:
-   - `ok`: true/false
-   - `message`: Mensaje descriptivo
-   - `advisorId`: ID real del asesor
-   - `micrositeUrl`: URL completa del microsite del asesor
-   - `advisor`: Objeto con datos del asesor (nombre, email, teléfono, etc.)
-5. **Landing de activación**: Si la respuesta es exitosa, muestra una landing con:
-   - Card del asesor con su información
-   - Botón "Ver mi microsite" (navega a `/asesor/{advisorId}`)
-   - Botón "Actualizar mis datos" (navega a `/asesor/{advisorId}/actualizar`)
-   - Botón "Descargar carnet digital" (muestra mensaje informativo)
-   - Bloque explicativo de funcionalidades del microsite
-
-### 4. Notas importantes
-
-- **Seguridad**: La app frontend solo conoce `VITE_API_URL`. Las credenciales de DANAconnect (`DANA_CLIENT_ID`, `DANA_CLIENT_SECRET`) deben estar solo en la Lambda.
-- **Identificadores**: El `danaparam` NO es el AdvisorId, NO es cédula, NO es código del asesor. Es el identificador interno que usa DANAconnect.
-- **URL de correo**: Usar formato `/activar?danaparam=$f{dana}` sin slash antes del query.
-- **Rutas existentes**: Las rutas existentes (`/asesor/:advisorId`, `/asesor/:advisorId/actualizar`) continúan funcionando normalmente.
-
-### 5. Ejemplo de uso
-
-Al entrar a:
-```
-https://main.d1w0srn8uz6n.amplifyapp.com/activar?danaparam=abc123
+Desactivado:
+  MICROSITEACTIVADO NO
+  UPDATE DESACTIVADO
 ```
 
-La app mostrará:
-1. Estado de carga mientras consulta a la Lambda
-2. Landing de activación con los datos del asesor
-3. Acciones para ver el microsite y actualizar datos
+El campo `UPDATE` lo escriben los nodos Update de DANA, no la Lambda.
+
+## Decisiones pendientes
+
+Las decisiones que aun deben cerrarse con cliente, negocio o auditoria estan documentadas en `docs/preguntas-cliente.md`. Ese documento explica que se debe decidir, por que importa y cual es la propuesta actual del proyecto.

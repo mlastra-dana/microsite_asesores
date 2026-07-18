@@ -13,10 +13,8 @@ Este documento recoge la direccion funcional conversada para darle forma a la ap
 7. Al abrir `/asesor/{advisorId}`, el frontend consulta la Lambda.
 8. La Lambda usa DynamoDB para resolver el `PUBLICID` y devuelve el ultimo snapshot valido.
 9. Si DANAconnect marca un asesor como inactivo, el flujo llama `advisor_sync` con `action=deactivate`, la Lambda guarda `micrositeActive=false` en DynamoDB y el microsite permanente deja de mostrarse.
-11. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y descargar un carnet tipo wallet/pass.
-12. Para Apple se contempla generar `.pkpass`.
-13. Para Android se contempla un pase compatible con wallet.
-14. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect o un servicio del banco siguen siendo la fuente oficial.
+10. Desde ese microsite se puede descargar el contacto, solicitar cotizacion y solicitar actualizacion de datos.
+11. El asesor puede enviar solicitudes de actualizacion de datos; DANAconnect o un servicio del banco siguen siendo la fuente oficial.
 
 ## Backend
 
@@ -27,7 +25,6 @@ Eventos previstos:
 - `landing_provision`: compatibilidad para traer el registro desde Data Retrieval API/DANAconnect cuando existe `danaparam`.
 - `advisor_sync`: endpoint recomendado para que DANAconnect cree, actualice o inactive el snapshot del microsite en DynamoDB enviando los campos del asesor por JSON.
 - `get_advisor`: resuelve el `PUBLICID` en DynamoDB.
-- `pass_request`: genera o solicita el pass de Apple/Android.
 - `quote_request`: recibe solicitudes de cotizacion.
 - `advisor_update`: recibe propuestas de actualizacion de datos.
 
@@ -109,11 +106,11 @@ DynamoDB es necesario para que el enlace limpio `/asesor/{PUBLICID}` funcione en
 - Recibir cambios desde DANAconnect con `advisor_sync` para evitar consultas a DANA en cada carga del site.
 - Solicitudes de cotizacion.
 - Solicitudes de actualizacion.
-- Historial de generacion de pases wallet.
+- Historial de solicitudes operativas asociadas al microsite.
 
 ## Importante
 
-La demo frontend debe seguir funcionando sin backend real. Si `VITE_API_URL` no existe, los eventos se guardan en `localStorage`.
+En desarrollo local, si `VITE_API_URL` no existe, los eventos se guardan en `localStorage` para no bloquear pruebas de interfaz. En ambientes conectados, `VITE_API_URL` debe apuntar a la Lambda.
 
 Por auditoria, esta etapa no borra registros de DynamoDB automaticamente. Si un asesor ya no debe cargar, la baja se ejecuta con el flujo de desactivacion y el enlace permanente queda respondiendo como microsite inactivo.
 

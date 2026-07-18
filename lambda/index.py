@@ -1182,12 +1182,6 @@ def handle_simple_event(payload):
             "email",
             "phone",
         ],
-        "pass_request": [
-            "advisorId",
-            "advisorEmail",
-            "platform",
-            "micrositeUrl",
-        ],
     }
 
     if event_type not in required_by_type:

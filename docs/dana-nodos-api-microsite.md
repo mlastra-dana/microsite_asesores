@@ -232,11 +232,6 @@ DESACTIVAR
   El enlace permanente queda vivo como URL, pero el backend responde que el microsite no esta activo.
 ```
 
-## Preguntas abiertas para cliente/auditoria
+## Preguntas abiertas
 
-```text
-- Que debe ocurrir con snapshots existentes en Dynamo si un asesor desaparece de la lista de DANA.
-- Si la baja debe ser siempre explicita con UPDATE=DESACTIVAR o si se permitira una conciliacion posterior.
-- Periodicidad o evento oficial para refrescar cambios masivos desde DANA.
-- Donde se registraran los clicks por cotizador y si cada cotizador tendra URL propia por asesor.
-```
+Las decisiones pendientes con cliente/auditoria estan en `docs/preguntas-cliente.md`.

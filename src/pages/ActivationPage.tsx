@@ -173,7 +173,7 @@ export default function ActivationPage() {
             </h1>
             
             <p className="mt-3 text-[#6B7280]">
-              Estamos consultando la información de tu registro para generar tu microsite y tu carnet digital.
+              Estamos consultando la información de tu registro para preparar tu microsite.
             </p>
           </div>
         </main>
