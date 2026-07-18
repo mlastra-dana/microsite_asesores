@@ -72,6 +72,24 @@ COTIZADOR_SALUD_PANAMA_URL
 
 Si una URL cambia para un asesor, se actualiza en DANA y luego el flujo `UPDATE=ACTUALIZAR` sincroniza DynamoDB. Si un cotizador esta habilitado con `SI` pero no tiene URL, el frontend no debe mostrarlo.
 
+### Enlace permanente publico
+
+El microsite del asesor sera accesible sin login.
+
+Esta decision evita duplicar la funcion del portal de asesores existente. El objetivo del microsite es que el asesor pueda abrir, guardar y compartir su enlace permanente de forma directa para gestionar su actividad comercial.
+
+Control actual:
+
+La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el `ADVISORID` ni el `MICROSITEID`.
+
+Alcance del control:
+
+El enlace funciona como una URL publica. El enmascaramiento reduce exposicion de identificadores internos, pero no convierte el microsite en un portal autenticado.
+
+Recomendacion:
+
+Mantener el modelo sin login para esta etapa. Si mas adelante Mercantil requiere una capa adicional, evaluar controles ligeros que no dupliquen el portal actual, por ejemplo enlaces firmados, expiracion opcional para acciones sensibles o validaciones solo en formularios internos.
+
 ## Datos y ciclo de vida
 
 ### Baja de asesores
@@ -278,21 +296,3 @@ Si se requiere auditoria, reclamos o trazabilidad, estos eventos deben conservar
 Propuesta actual:
 
 Guardar solo lo necesario para operar el flujo actual y conservar el snapshot del asesor en DynamoDB. No aplicar borrado automatico hasta que cliente/auditoria defina una politica formal de retencion.
-
-### Enlace permanente publico
-
-Validacion requerida:
-
-Confirmar que el enlace permanente del asesor sera publico, sin login.
-
-Por que importa:
-
-El asesor necesita guardar y compartir su link. Como no hay login, cualquier persona con el enlace puede abrir el microsite.
-
-Control actual:
-
-La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el `ADVISORID` ni el `MICROSITEID`.
-
-Limite del control:
-
-Esto reduce exposicion del identificador real, pero no equivale a autenticacion. Si cliente necesita acceso privado, se requiere definir un mecanismo adicional de seguridad.
