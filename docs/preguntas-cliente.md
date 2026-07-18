@@ -81,8 +81,7 @@ Esta decision evita duplicar la funcion del portal de asesores existente. El obj
 Control actual:
 
 La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el `ADVISORID` ni el `MICROSITEID`.
-
-Esto es importante porque el `ADVISORID` de Mercantil es un identificador interno del negocio y puede seguir una logica conocida o secuencial. Si ese valor se usara directamente en la URL, un asesor podria intentar deducir enlaces de otros asesores. Con el `PUBLICID` enmascarado, la URL publica no permite inferir el codigo real ni avanzar por una secuencia.
+Con el `PUBLICID` enmascarado, la URL publica no permite inferir el codigo real ni avanzar por una secuencia.
 
 Alcance del control:
 
