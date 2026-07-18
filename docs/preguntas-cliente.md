@@ -50,6 +50,23 @@ BIOASESOR
 
 Esas solicitudes no cambian directamente el dato productivo. Deben pasar por el proceso oficial definido por Mercantil/DANA antes de reflejarse en DANA y DynamoDB.
 
+### URLs de cotizadores
+
+Cada cotizador habilitado debe tener su URL configurada en DANA.
+
+Las banderas `COTIZADOR_*` definen si un producto se muestra o no para un asesor. Las URLs de esos cotizadores tambien deben venir desde DANA, porque DANA es el punto de control operativo y esos enlaces pueden cambiar.
+
+Ejemplo de campos esperados:
+
+```text
+COTIZADOR_AUTO_URL
+COTIZADOR_SALUD_URL
+COTIZADOR_VITALES_URL
+COTIZADOR_CR_URL
+```
+
+Si una URL cambia, se actualiza en DANA y luego el flujo `UPDATE=ACTUALIZAR` sincroniza DynamoDB.
+
 ## Datos y ciclo de vida
 
 ### Baja de asesores
@@ -90,27 +107,19 @@ No se pierde historia y el enlace permanente puede responder de forma controlada
 
 ## Cotizadores
 
-### URL por cotizador
+### Alta de nuevos productos
 
 Decision a confirmar:
 
-Si cada cotizador habilitado para un asesor tendra una URL propia en DANA.
+Como se agregaran productos/cotizadores nuevos en el futuro.
 
 Por que importa:
 
-Hoy tenemos banderas `SI`/`NO` para saber que productos mostrar. Si ademas cada cotizador tiene un enlace propio, debemos agregar campos de URL por producto y el frontend debe abrir esos enlaces especificos.
+Hoy cada producto tiene campos especificos en DANA para habilitarlo y para guardar su URL. Si aparece un producto nuevo, hay que definir si se crean nuevos campos en la lista de contactos, si existe una configuracion global de productos o si el modelo debe soportar una lista dinamica por asesor.
 
 Propuesta actual:
 
-Mantener las banderas `COTIZADOR_*` para habilitar o esconder productos, y agregar campos separados para URLs cuando cliente confirme el modelo.
-
-Ejemplo de campos posibles:
-
-```text
-COTIZADOR_AUTO_URL
-COTIZADOR_SALUD_URL
-COTIZADOR_VITALES_URL
-```
+Para esta etapa, mantener campos explicitos por producto en DANA porque es mas simple de operar y auditar. Si el catalogo crece frecuentemente, proponer una segunda etapa con modelo dinamico de productos.
 
 ### Registro de clicks
 
