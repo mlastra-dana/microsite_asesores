@@ -5,6 +5,8 @@ type ProductCardProps = {
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const hasUrl = Boolean(product.url);
+
   if (product.featured) {
     return (
       <article className="flex h-full flex-col rounded-2xl bg-[#00478D] p-6 text-white shadow-soft ring-1 ring-[#00376E] transition hover:-translate-y-0.5 hover:shadow-lg sm:col-span-2 lg:col-span-2">
@@ -20,14 +22,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         <h3 className="mt-5 text-2xl font-extrabold leading-tight">{product.title}</h3>
         <p className="mt-3 flex-1 text-sm leading-6 text-white/90">{product.description}</p>
-        <a
-          href={product.url}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-[#00478D] shadow-sm transition hover:bg-[#F4F7FB]"
-        >
-          {product.ctaLabel ?? 'Cotizar'}
-        </a>
+        {hasUrl ? (
+          <a
+            href={product.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-[#00478D] shadow-sm transition hover:bg-[#F4F7FB]"
+          >
+            {product.ctaLabel ?? 'Cotizar'}
+          </a>
+        ) : (
+          <span className="mt-6 rounded-lg bg-white/15 px-5 py-3 text-center text-sm font-extrabold text-white/80">
+            No disponible
+          </span>
+        )}
       </article>
     );
   }
@@ -39,14 +47,20 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
       <h3 className="text-xl font-extrabold text-dana-ink">{product.title}</h3>
       <p className="mt-3 flex-1 text-sm leading-6 text-dana-muted">{product.description}</p>
-      <a
-        href={product.url}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-5 rounded-lg bg-[#00478D] px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
-      >
-        {product.ctaLabel ?? 'Cotizar'}
-      </a>
+      {hasUrl ? (
+        <a
+          href={product.url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-5 rounded-lg bg-[#00478D] px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+        >
+          {product.ctaLabel ?? 'Cotizar'}
+        </a>
+      ) : (
+        <span className="mt-5 rounded-lg bg-slate-100 px-5 py-3 text-center text-sm font-extrabold text-dana-muted">
+          No disponible
+        </span>
+      )}
     </article>
   );
 }

@@ -62,6 +62,20 @@ Campos de cotizadores por asesor. Cada uno debe usar `SI` o `NO`:
 - `COTIZADOR_CR`
 - `COTIZADOR_SALUD_PANAMA`
 
+Cada cotizador habilitado debe tener tambien su URL correspondiente en DANA por asesor:
+
+- `COTIZADOR_SIMPLIFICADO_URL`
+- `COTIZADOR_VITALES_URL`
+- `COTIZADOR_AUTO_URL`
+- `COTIZADOR_SALUD_URL`
+- `COTIZADOR_EMERGENCIAS_MEDICAS_URL`
+- `COTIZADOR_PLATINO_URL`
+- `COTIZADOR_TRAVEL_URL`
+- `COTIZADOR_CR_URL`
+- `COTIZADOR_SALUD_PANAMA_URL`
+
+La Lambda guarda esas URLs en DynamoDB como `advisor.productLinks`. El frontend usa esas URLs para el boton de cotizar de cada producto. No se asume una URL global: cada asesor puede tener enlaces distintos.
+
 El cliente debe cargar en DANA la informacion basica, el `ADVISORID` unico y las banderas de cotizadores. El flujo de DANA envia esos datos a la Lambda por nodo API. Nosotros generamos el `MICROSITEID` interno usando `ADVISORID` como semilla estable y generamos un `PUBLICID` distinto para no exponer ni el `ADVISORID` ni el `MICROSITEID` real en la URL publica.
 
 Si DANA borra `MICROSITEID` y vuelve a enviar el mismo contacto, la Lambda regenera el mismo `MICROSITEID` y el mismo `PUBLICID` mientras `ADVISORID` se mantenga igual.

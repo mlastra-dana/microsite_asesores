@@ -52,20 +52,25 @@ Esas solicitudes no cambian directamente el dato productivo. Deben pasar por el 
 
 ### URLs de cotizadores
 
-Cada cotizador habilitado debe tener su URL configurada en DANA.
+Cada cotizador habilitado debe tener su URL configurada en DANA por asesor.
 
-Las banderas `COTIZADOR_*` definen si un producto se muestra o no para un asesor. Las URLs de esos cotizadores tambien deben venir desde DANA, porque DANA es el punto de control operativo y esos enlaces pueden cambiar.
+Las banderas `COTIZADOR_*` definen si un producto se muestra o no para un asesor. Las URLs de esos cotizadores tambien deben venir desde DANA en el registro de ese asesor, porque DANA es el punto de control operativo y esos enlaces pueden cambiar.
 
 Ejemplo de campos esperados:
 
 ```text
+COTIZADOR_SIMPLIFICADO_URL
+COTIZADOR_VITALES_URL
 COTIZADOR_AUTO_URL
 COTIZADOR_SALUD_URL
-COTIZADOR_VITALES_URL
+COTIZADOR_EMERGENCIAS_MEDICAS_URL
+COTIZADOR_PLATINO_URL
+COTIZADOR_TRAVEL_URL
 COTIZADOR_CR_URL
+COTIZADOR_SALUD_PANAMA_URL
 ```
 
-Si una URL cambia, se actualiza en DANA y luego el flujo `UPDATE=ACTUALIZAR` sincroniza DynamoDB.
+Si una URL cambia para un asesor, se actualiza en DANA y luego el flujo `UPDATE=ACTUALIZAR` sincroniza DynamoDB. Si un cotizador esta habilitado con `SI` pero no tiene URL, el frontend no debe mostrarlo.
 
 ## Datos y ciclo de vida
 

@@ -36,7 +36,7 @@ DANA_TRIGGER_URL = os.environ.get("DANA_TRIGGER_URL", "https://appserv.danaconne
 DANA_MICROSITE_PARAM_FIELD = os.environ.get("DANA_MICROSITE_PARAM_FIELD", "danaParam")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
-    "ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA",
+    "ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_SIMPLIFICADO_URL,COTIZADOR_VITALES,COTIZADOR_VITALES_URL,COTIZADOR_AUTO,COTIZADOR_AUTO_URL,COTIZADOR_SALUD,COTIZADOR_SALUD_URL,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_EMERGENCIAS_MEDICAS_URL,COTIZADOR_PLATINO,COTIZADOR_PLATINO_URL,COTIZADOR_TRAVEL,COTIZADOR_TRAVEL_URL,COTIZADOR_CR,COTIZADOR_CR_URL,COTIZADOR_SALUD_PANAMA,COTIZADOR_SALUD_PANAMA_URL",
 )
 
 DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
@@ -400,15 +400,15 @@ def split_products(value):
 
 
 PRODUCT_FLAG_FIELDS = [
-    ("COTIZADOR_SIMPLIFICADO", "Cotizador Simplificado"),
-    ("COTIZADOR_VITALES", "Vitales"),
-    ("COTIZADOR_AUTO", "Auto"),
-    ("COTIZADOR_SALUD", "Salud"),
-    ("COTIZADOR_EMERGENCIAS_MEDICAS", "Emergencias Médicas"),
-    ("COTIZADOR_PLATINO", "Platino"),
-    ("COTIZADOR_TRAVEL", "Travel"),
-    ("COTIZADOR_CR", "C.R."),
-    ("COTIZADOR_SALUD_PANAMA", "Salud Panamá"),
+    ("COTIZADOR_SIMPLIFICADO", "COTIZADOR_SIMPLIFICADO_URL", "Cotizador Simplificado"),
+    ("COTIZADOR_VITALES", "COTIZADOR_VITALES_URL", "Vitales"),
+    ("COTIZADOR_AUTO", "COTIZADOR_AUTO_URL", "Auto"),
+    ("COTIZADOR_SALUD", "COTIZADOR_SALUD_URL", "Salud"),
+    ("COTIZADOR_EMERGENCIAS_MEDICAS", "COTIZADOR_EMERGENCIAS_MEDICAS_URL", "Emergencias Médicas"),
+    ("COTIZADOR_PLATINO", "COTIZADOR_PLATINO_URL", "Platino"),
+    ("COTIZADOR_TRAVEL", "COTIZADOR_TRAVEL_URL", "Travel"),
+    ("COTIZADOR_CR", "COTIZADOR_CR_URL", "C.R."),
+    ("COTIZADOR_SALUD_PANAMA", "COTIZADOR_SALUD_PANAMA_URL", "Salud Panamá"),
 ]
 
 
@@ -423,11 +423,26 @@ def is_disabled(value):
 def products_from_flags(data):
     enabled_products = []
 
-    for field_code, product_title in PRODUCT_FLAG_FIELDS:
+    for field_code, _url_field_code, product_title in PRODUCT_FLAG_FIELDS:
         if is_enabled(extract_field(data, field_code)):
             enabled_products.append(product_title)
 
     return enabled_products
+
+
+def product_links_from_flags(data):
+    product_links = {}
+
+    for field_code, url_field_code, product_title in PRODUCT_FLAG_FIELDS:
+        if not is_enabled(extract_field(data, field_code)):
+            continue
+
+        url = str(extract_field(data, url_field_code) or "").strip()
+
+        if url:
+            product_links[product_title] = url
+
+    return product_links
 
 
 def normalize_dana_response(data):
@@ -506,6 +521,7 @@ def normalize_dana_response(data):
         extract_field(data, "micrositeActive"),
     )
     products = products_from_flags(data)
+    product_links = product_links_from_flags(data)
 
     if not products:
         products = split_products(first_value(
@@ -531,6 +547,7 @@ def normalize_dana_response(data):
         "photoUrl": photo_url,
         "bio": bio,
         "products": products,
+        "productLinks": product_links,
         "micrositeActive": not is_disabled(microsite_active_value),
     }
 
@@ -801,6 +818,7 @@ def comparable_record(record):
             "website": advisor.get("website"),
             "contactUrl": advisor.get("contactUrl"),
             "products": advisor.get("products") or [],
+            "productLinks": advisor.get("productLinks") or {},
             "micrositeActive": bool(advisor.get("micrositeActive", True)),
         },
     }

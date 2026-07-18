@@ -44,18 +44,27 @@ Este request no envia `MICROSITEID` ni `MICROSITEURL`. La Lambda los genera y lo
   "WEBSITEASESOR": "$s{WEBSITEASESOR}",
   "CONTACTOASESOR": "$s{CONTACTOASESOR}",
   "COTIZADOR_SIMPLIFICADO": "$s{COTIZADOR_SIMPLIFICADO}",
+  "COTIZADOR_SIMPLIFICADO_URL": "$s{COTIZADOR_SIMPLIFICADO_URL}",
   "COTIZADOR_VITALES": "$s{COTIZADOR_VITALES}",
+  "COTIZADOR_VITALES_URL": "$s{COTIZADOR_VITALES_URL}",
   "COTIZADOR_AUTO": "$s{COTIZADOR_AUTO}",
+  "COTIZADOR_AUTO_URL": "$s{COTIZADOR_AUTO_URL}",
   "COTIZADOR_SALUD": "$s{COTIZADOR_SALUD}",
+  "COTIZADOR_SALUD_URL": "$s{COTIZADOR_SALUD_URL}",
   "COTIZADOR_EMERGENCIAS_MEDICAS": "$s{COTIZADOR_EMERGENCIAS_MEDICAS}",
+  "COTIZADOR_EMERGENCIAS_MEDICAS_URL": "$s{COTIZADOR_EMERGENCIAS_MEDICAS_URL}",
   "COTIZADOR_PLATINO": "$s{COTIZADOR_PLATINO}",
+  "COTIZADOR_PLATINO_URL": "$s{COTIZADOR_PLATINO_URL}",
   "COTIZADOR_TRAVEL": "$s{COTIZADOR_TRAVEL}",
+  "COTIZADOR_TRAVEL_URL": "$s{COTIZADOR_TRAVEL_URL}",
   "COTIZADOR_CR": "$s{COTIZADOR_CR}",
-  "COTIZADOR_SALUD_PANAMA": "$s{COTIZADOR_SALUD_PANAMA}"
+  "COTIZADOR_CR_URL": "$s{COTIZADOR_CR_URL}",
+  "COTIZADOR_SALUD_PANAMA": "$s{COTIZADOR_SALUD_PANAMA}",
+  "COTIZADOR_SALUD_PANAMA_URL": "$s{COTIZADOR_SALUD_PANAMA_URL}"
 }
 ```
 
-## 1. UPDATE generar
+## 1. POST generar
 
 Este nodo Update es el unico que escribe `MICROSITEID` y `MICROSITEURL`, porque en generacion DANA todavia no los tiene.
 
@@ -88,14 +97,23 @@ Este request usa los valores actuales de `MICROSITEID` y `MICROSITEURL` que ya g
   "WEBSITEASESOR": "$s{WEBSITEASESOR}",
   "CONTACTOASESOR": "$s{CONTACTOASESOR}",
   "COTIZADOR_SIMPLIFICADO": "$s{COTIZADOR_SIMPLIFICADO}",
+  "COTIZADOR_SIMPLIFICADO_URL": "$s{COTIZADOR_SIMPLIFICADO_URL}",
   "COTIZADOR_VITALES": "$s{COTIZADOR_VITALES}",
+  "COTIZADOR_VITALES_URL": "$s{COTIZADOR_VITALES_URL}",
   "COTIZADOR_AUTO": "$s{COTIZADOR_AUTO}",
+  "COTIZADOR_AUTO_URL": "$s{COTIZADOR_AUTO_URL}",
   "COTIZADOR_SALUD": "$s{COTIZADOR_SALUD}",
+  "COTIZADOR_SALUD_URL": "$s{COTIZADOR_SALUD_URL}",
   "COTIZADOR_EMERGENCIAS_MEDICAS": "$s{COTIZADOR_EMERGENCIAS_MEDICAS}",
+  "COTIZADOR_EMERGENCIAS_MEDICAS_URL": "$s{COTIZADOR_EMERGENCIAS_MEDICAS_URL}",
   "COTIZADOR_PLATINO": "$s{COTIZADOR_PLATINO}",
+  "COTIZADOR_PLATINO_URL": "$s{COTIZADOR_PLATINO_URL}",
   "COTIZADOR_TRAVEL": "$s{COTIZADOR_TRAVEL}",
+  "COTIZADOR_TRAVEL_URL": "$s{COTIZADOR_TRAVEL_URL}",
   "COTIZADOR_CR": "$s{COTIZADOR_CR}",
-  "COTIZADOR_SALUD_PANAMA": "$s{COTIZADOR_SALUD_PANAMA}"
+  "COTIZADOR_CR_URL": "$s{COTIZADOR_CR_URL}",
+  "COTIZADOR_SALUD_PANAMA": "$s{COTIZADOR_SALUD_PANAMA}",
+  "COTIZADOR_SALUD_PANAMA_URL": "$s{COTIZADOR_SALUD_PANAMA_URL}"
 }
 ```
 
@@ -209,7 +227,36 @@ micrositeActivado
 source
   Origen usado por la Lambda para armar el snapshot.
   En el flujo actual debe ser direct_payload porque DANA envia los campos en el JSON.
+
+productLinks
+  Objeto interno guardado en DynamoDB con la URL por cotizador habilitado.
+  DANA no necesita mapear este objeto completo en un campo, porque ya conserva cada URL en sus campos `COTIZADOR_*_URL`.
 ```
+
+## Campos nuevos para crear en DANA
+
+Crear estos campos tipo texto/URL. Deben existir en la lista `Microsite_asesores` para que cada registro de asesor tenga sus propios enlaces y los nodos API puedan enviarlos a la Lambda.
+
+```text
+COTIZADOR_SIMPLIFICADO_URL
+COTIZADOR_VITALES_URL
+COTIZADOR_AUTO_URL
+COTIZADOR_SALUD_URL
+COTIZADOR_EMERGENCIAS_MEDICAS_URL
+COTIZADOR_PLATINO_URL
+COTIZADOR_TRAVEL_URL
+COTIZADOR_CR_URL
+COTIZADOR_SALUD_PANAMA_URL
+```
+
+Regla operativa:
+
+```text
+COTIZADOR_AUTO = SI       -> COTIZADOR_AUTO_URL debe tener URL.
+COTIZADOR_AUTO = NO/vacio -> COTIZADOR_AUTO_URL puede quedar vacio.
+```
+
+El frontend muestra solo los cotizadores habilitados por bandera `SI` que tambien tengan URL. Si un cotizador viene en `SI` pero su campo `COTIZADOR_*_URL` esta vacio, se considera configuracion incompleta y no se muestra.
 
 ## Reglas de negocio cerradas
 
@@ -231,7 +278,3 @@ DESACTIVAR
   Update node: no borra MICROSITEID ni MICROSITEURL; escribe MICROSITEACTIVADO=NO, RESPONSE_MICROSITE y UPDATE=DESACTIVADO.
   El enlace permanente queda vivo como URL, pero el backend responde que el microsite no esta activo.
 ```
-
-## Preguntas abiertas
-
-Las decisiones pendientes con cliente/auditoria estan en `docs/preguntas-cliente.md`.

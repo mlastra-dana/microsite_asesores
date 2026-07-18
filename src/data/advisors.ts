@@ -15,6 +15,7 @@ export type Advisor = {
   photoUrl: string;
   bio: string;
   products: string[];
+  productLinks?: Record<string, string>;
 };
 
 export const advisors: Advisor[] = [

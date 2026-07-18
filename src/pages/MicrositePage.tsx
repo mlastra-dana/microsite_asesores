@@ -21,6 +21,7 @@ function emptyAdvisor(id?: string): Advisor {
     photoUrl: '',
     bio: '',
     products: [],
+    productLinks: {},
   };
 }
 
@@ -41,6 +42,7 @@ function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
     photoUrl: apiAdvisor.photoUrl || fallback.photoUrl,
     bio: apiAdvisor.bio || fallback.bio,
     products: apiAdvisor.products?.length ? apiAdvisor.products : fallback.products,
+    productLinks: apiAdvisor.productLinks || fallback.productLinks || {},
   };
 }
 
@@ -145,10 +147,32 @@ export default function MicrositePage() {
       return products;
     }
 
-    const selectedProducts = products.filter((product) => advisor.products.includes(product.title));
+    const requireAdvisorProductUrls = !hasLocalAdvisor;
+    const selectedProducts = products
+      .filter((product) => advisor.products.includes(product.title))
+      .map((product) => {
+        const advisorProductUrl = advisor.productLinks?.[product.title];
+
+        if (requireAdvisorProductUrls) {
+          return {
+            ...product,
+            url: advisorProductUrl || '',
+          };
+        }
+
+        return {
+          ...product,
+          url: advisorProductUrl || product.url,
+        };
+      })
+      .filter((product) => product.url);
+
+    if (requireAdvisorProductUrls) {
+      return selectedProducts;
+    }
 
     return selectedProducts.length ? selectedProducts : products;
-  }, [advisor]);
+  }, [advisor, hasLocalAdvisor]);
 
   function openAdvisorContact(subject: string) {
     if (!advisor) {

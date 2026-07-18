@@ -53,7 +53,7 @@ Recomendadas:
 ```bash
 DANA_BASE_URL=https://appserv.danaconnect.com
 DANA_TRIGGER_URL=https://appserv.danaconnect.com/event/Trigger
-DANA_DATA_FIELDS=ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_VITALES,COTIZADOR_AUTO,COTIZADOR_SALUD,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_PLATINO,COTIZADOR_TRAVEL,COTIZADOR_CR,COTIZADOR_SALUD_PANAMA
+DANA_DATA_FIELDS=ADVISORID,EMAILASESOR,FOTOASESOR,NOMBREASESOR,TELEFONOASESOR,MICROSITEID,MICROSITEURL,MICROSITEACTIVADO,danaParam,CIUDADASESOR,BIOASESOR,WEBSITEASESOR,CONTACTOASESOR,COTIZADOR_SIMPLIFICADO,COTIZADOR_SIMPLIFICADO_URL,COTIZADOR_VITALES,COTIZADOR_VITALES_URL,COTIZADOR_AUTO,COTIZADOR_AUTO_URL,COTIZADOR_SALUD,COTIZADOR_SALUD_URL,COTIZADOR_EMERGENCIAS_MEDICAS,COTIZADOR_EMERGENCIAS_MEDICAS_URL,COTIZADOR_PLATINO,COTIZADOR_PLATINO_URL,COTIZADOR_TRAVEL,COTIZADOR_TRAVEL_URL,COTIZADOR_CR,COTIZADOR_CR_URL,COTIZADOR_SALUD_PANAMA,COTIZADOR_SALUD_PANAMA_URL
 DANA_FIELDS_QUERY_PARAM=fieldList
 MICROSITE_BASE_URL=https://tudominio.com
 MICROSITE_ID_SECRET=valor-largo-privado
@@ -84,7 +84,7 @@ La URL publica usa un `PUBLICID` derivado por HMAC a partir de `MICROSITEID`, `A
 
 Si DANA envia `MICROSITEID` vacio, la Lambda lo genera automaticamente con un hash firmado usando `ADVISORID` y `MICROSITE_ID_SECRET`. Eso hace que el mismo asesor regenere el mismo `MICROSITEID` aunque DANA borre el campo y vuelva a enviar el contacto desde otro correo/evento.
 
-Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que verá cada asesor.
+Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que vera cada asesor. Cada cotizador habilitado tambien debe tener su campo `COTIZADOR_*_URL` en el registro de ese asesor; si viene en `SI` sin URL, el frontend no lo muestra.
 
 Si el request incluye `dana`, la Lambda puede llamar `DANA_TRIGGER_URL` para actualizar:
 
@@ -205,7 +205,13 @@ La Lambda resuelve ese identificador contra DynamoDB y devuelve:
     "email": "mlastra@danaconnect.com",
     "phone": "04142563325",
     "advisorCode": "24657722",
-    "products": ["Cotizador Simplificado", "Vitales", "Auto", "Salud"]
+    "products": ["Cotizador Simplificado", "Vitales", "Auto", "Salud"],
+    "productLinks": {
+      "Cotizador Simplificado": "https://link.mercantilseguros.com/CotizadorMS_ADS_2377",
+      "Vitales": "https://link.mercantilseguros.com/Vitales_ADS_2377",
+      "Auto": "https://link.mercantilseguros.com/Auto_ADS_2377",
+      "Salud": "https://link.mercantilseguros.com/Salud_ADS_2377"
+    }
   }
 }
 ```
@@ -237,14 +243,23 @@ curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
     "WEBSITEASESOR":"https://...",
     "CONTACTOASESOR":"https://...",
     "COTIZADOR_SIMPLIFICADO":"SI",
+    "COTIZADOR_SIMPLIFICADO_URL":"https://link.mercantilseguros.com/CotizadorMS_ADS_2377",
     "COTIZADOR_VITALES":"NO",
+    "COTIZADOR_VITALES_URL":"",
     "COTIZADOR_AUTO":"SI",
+    "COTIZADOR_AUTO_URL":"https://link.mercantilseguros.com/Auto_ADS_2377",
     "COTIZADOR_SALUD":"SI",
+    "COTIZADOR_SALUD_URL":"https://link.mercantilseguros.com/Salud_ADS_2377",
     "COTIZADOR_EMERGENCIAS_MEDICAS":"NO",
+    "COTIZADOR_EMERGENCIAS_MEDICAS_URL":"",
     "COTIZADOR_PLATINO":"NO",
+    "COTIZADOR_PLATINO_URL":"",
     "COTIZADOR_TRAVEL":"NO",
+    "COTIZADOR_TRAVEL_URL":"",
     "COTIZADOR_CR":"SI",
-    "COTIZADOR_SALUD_PANAMA":"NO"
+    "COTIZADOR_CR_URL":"https://link.mercantilseguros.com/Residencial_ADS_2377",
+    "COTIZADOR_SALUD_PANAMA":"NO",
+    "COTIZADOR_SALUD_PANAMA_URL":""
   }'
 ```
 
@@ -255,6 +270,8 @@ MICROSITEID
 MICROSITEURL
 MICROSITEACTIVADO=SI
 ```
+
+Internamente guarda las URLs de cotizadores en `advisor.productLinks`. DANA no necesita mapear ese objeto completo, porque conserva cada URL en sus campos `COTIZADOR_*_URL`.
 
 Campos planos para mapear desde el response del nodo API:
 
