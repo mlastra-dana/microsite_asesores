@@ -110,6 +110,24 @@ Impacto:
 
 No se pierde historia y el enlace permanente puede responder de forma controlada como microsite inactivo.
 
+### Reactivacion de asesores
+
+Decision a confirmar:
+
+Si un asesor que fue desactivado puede ser reactivado posteriormente.
+
+Por que importa:
+
+Si la reactivacion esta permitida, el microsite debe conservar el mismo `MICROSITEID` y la misma `MICROSITEURL` para no romper enlaces ya enviados o guardados por el asesor. Si no esta permitida, el flujo debe impedir que un asesor inactivo vuelva a publicarse sin un alta nueva formal.
+
+Propuesta actual:
+
+Permitir reactivacion mediante el mismo flujo de actualizacion, enviando `MICROSITEACTIVADO=SI` y `UPDATE=ACTUALIZAR` desde DANA. La Lambda debe actualizar DynamoDB con `micrositeActive=true` y conservar el identificador publico ya existente.
+
+Impacto:
+
+El asesor puede volver a estar activo sin cambiar su enlace permanente. Esta regla debe quedar aprobada por negocio/auditoria para saber si aplica a cualquier baja o solo a casos excepcionales.
+
 ## Cotizadores
 
 ### Alta de nuevos productos
