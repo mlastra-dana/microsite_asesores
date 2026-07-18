@@ -70,8 +70,11 @@ export default function MicrositePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dataRef = searchParams.get('ref');
-  const fallbackAdvisor = hasAdvisorById(advisorId) ? getAdvisorById(advisorId) : emptyAdvisor(advisorId);
-  const hasLocalAdvisor = hasAdvisorById(advisorId);
+  const hasLocalAdvisor = useMemo(() => hasAdvisorById(advisorId), [advisorId]);
+  const fallbackAdvisor = useMemo(
+    () => hasLocalAdvisor ? getAdvisorById(advisorId) : emptyAdvisor(advisorId),
+    [advisorId, hasLocalAdvisor],
+  );
   const [advisor, setAdvisor] = useState<Advisor | null>(hasLocalAdvisor ? fallbackAdvisor : null);
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [advisorError, setAdvisorError] = useState('');
