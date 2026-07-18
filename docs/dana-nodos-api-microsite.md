@@ -331,12 +331,12 @@ docs/dana-microsite-asesores-demo.csv
 Cabecera esperada:
 
 ```csv
-UID,NombreAsesor ,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,MicrositeID,MicrositeURL,CiudadAsesor,BioAsesor,WebsiteAsesor,ContactoAsesor,Cotizador_simplificado,Cotizador_simplificado_url,Cotizador_vitales,Cotizador_vitales_url,Cotizador_auto,cotizador_auto_url,Cotizador_salud,Cotizador_salud_url,Cotizador_emergencias_medicas,Cotizador_emergencias_medicas_url,Cotizador_platino,Cotizador_platino_url,Cotizador_travel,Cotizador_travel_url,Cotizador_CR,Cotizador_CR_url,Cotizador_Salud_Panama,Cotizador_salud_panama_url,response_microsite,response_actualizacion,response_baja,Micrositeactivado
+UID,NombreAsesor,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,MicrositeID,MicrositeURL,CiudadAsesor,BioAsesor,WebsiteAsesor,ContactoAsesor,Cotizador_simplificado,Cotizador_simplificado_url,Cotizador_vitales,Cotizador_vitales_url,Cotizador_auto,cotizador_auto_url,Cotizador_salud,Cotizador_salud_url,Cotizador_emergencias_medicas,Cotizador_emergencias_medicas_url,Cotizador_platino,Cotizador_platino_url,Cotizador_travel,Cotizador_travel_url,Cotizador_CR,Cotizador_CR_url,Cotizador_Salud_Panama,Cotizador_salud_panama_url,response_microsite,response_actualizacion,response_baja,Micrositeactivado
 ```
 
 Notas importantes:
 
-- `NombreAsesor ` tiene un espacio al final en la estructura actual. Debe conservarse mientras DANA lo tenga asi, porque si cambia el header puede fallar el automapeo.
+- `NombreAsesor` debe ir sin espacios al inicio o al final para evitar problemas de automapeo en DANA.
 - En registros nuevos para generar, deben venir vacios `Update`, `MicrositeID`, `MicrositeURL`, `response_microsite`, `response_actualizacion`, `response_baja` y `Micrositeactivado`.
 - El nodo API de generar devuelve `micrositeId` y `micrositeUrl`; el nodo Update de DANA los escribe en `MicrositeID` y `MicrositeURL`.
 - En actualizaciones, `MicrositeID` y `MicrositeURL` ya deben venir poblados y no deben reescribirse desde el nodo Update.
