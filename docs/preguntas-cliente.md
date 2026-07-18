@@ -1,12 +1,12 @@
-# Preguntas abiertas para cliente/auditoria
+# Puntos de validacion para cliente/auditoria
 
-Este documento agrupa las decisiones que todavia deben validarse con cliente, negocio, auditoria o areas tecnicas antes de cerrar una version productiva.
+Este documento resume las decisiones ya cerradas para el piloto y los puntos que conviene validar con cliente, negocio, auditoria o areas tecnicas antes de avanzar a una version productiva.
 
-La idea no es listar dudas sueltas, sino dejar claro:
+La idea es dejar claro:
 
 - Que se debe decidir.
 - Por que importa.
-- Cual es la propuesta actual del proyecto, cuando ya tenemos una recomendacion.
+- Cual es el criterio actual del proyecto cuando ya existe una recomendacion.
 
 ## Decisiones cerradas
 
@@ -76,13 +76,13 @@ Si una URL cambia para un asesor, se actualiza en DANA y luego el flujo `UPDATE=
 
 ### Baja de asesores
 
-Decision a confirmar:
+Validacion requerida:
 
 Si un asesor debe salir de servicio, debe pasar obligatoriamente por el flujo `UPDATE=DESACTIVAR` antes de ser eliminado o removido de la lista de DANA.
 
 Por que importa:
 
-DynamoDB conserva el snapshot que usa el enlace permanente. Si alguien borra un asesor de DANA sin ejecutar la desactivacion, el registro podria seguir existiendo en DynamoDB.
+DynamoDB conserva el snapshot que usa el enlace permanente. Para que el estado publico sea consistente, la salida de servicio debe quedar reflejada por el flujo de desactivacion.
 
 Propuesta actual:
 
@@ -94,7 +94,7 @@ El enlace permanente sigue existiendo como URL, pero el backend responde que el 
 
 ### Conservacion historica en DynamoDB
 
-Decision a confirmar:
+Validacion requerida:
 
 Si los registros en DynamoDB deben conservarse historicamente aun cuando el asesor sea desactivado.
 
@@ -112,13 +112,13 @@ No se pierde historia y el enlace permanente puede responder de forma controlada
 
 ### Reactivacion de asesores
 
-Decision a confirmar:
+Validacion requerida:
 
 Si un asesor que fue desactivado puede ser reactivado posteriormente.
 
 Por que importa:
 
-Si la reactivacion esta permitida, el microsite debe conservar el mismo `MICROSITEID` y la misma `MICROSITEURL` para no romper enlaces ya enviados o guardados por el asesor. Si no esta permitida, el flujo debe impedir que un asesor inactivo vuelva a publicarse sin un alta nueva formal.
+Si la reactivacion se permite, el microsite debe conservar el mismo `MICROSITEID` y la misma `MICROSITEURL` para no romper enlaces ya enviados o guardados por el asesor.
 
 Propuesta actual:
 
@@ -126,19 +126,19 @@ Permitir reactivacion mediante el mismo flujo de actualizacion, enviando `MICROS
 
 Impacto:
 
-El asesor puede volver a estar activo sin cambiar su enlace permanente. Esta regla debe quedar aprobada por negocio/auditoria para saber si aplica a cualquier baja o solo a casos excepcionales.
+El asesor puede volver a estar activo sin cambiar su enlace permanente. Esta regla debe quedar aprobada por negocio/auditoria para saber si aplica como operacion regular o solo en casos excepcionales.
 
 ## Cotizadores
 
 ### Alta de nuevos productos
 
-Decision a confirmar:
+Validacion requerida:
 
 Como se gestionara comercial y tecnicamente el alta de productos/cotizadores nuevos.
 
 Por que importa:
 
-Hoy cada producto tiene campos especificos en DANA para habilitarlo y para guardar su URL. En seguros, este cambio probablemente no sera frecuente, por lo que el modelo actual puede ser suficiente para el primer alcance. Aun asi, si aparece un producto nuevo, hay un impacto tecnico y operativo que debe estar claro:
+Hoy cada producto tiene campos especificos en DANA para habilitarlo y para guardar su URL. Este modelo es adecuado para el piloto y para un segmento controlado de asesores. Si aparece un producto nuevo, el impacto tecnico y operativo debe estar claro:
 
 - Crear campos nuevos en DANA.
 - Agregar esos campos al JSON de los nodos API.
@@ -153,7 +153,7 @@ Para esta etapa, mantener campos explicitos por producto en DANA porque es mas s
 
 Si Mercantil solicita agregar un producto nuevo, se debe evaluar como cambio de alcance: crear campos en DANA, ajustar nodos, actualizar Lambda/frontend y validar el flujo end to end. Comercialmente, esta solicitud puede convertirse en un servicio adicional definido por KAM/cliente.
 
-Guia tecnica si el catalogo empieza a cambiar con frecuencia:
+Guia tecnica para una evolucion futura:
 
 Pasar a un modelo dinamico donde DANA envie a la Lambda una lista de cotizadores por asesor, en vez de un par de campos por cada producto.
 
@@ -195,11 +195,11 @@ Opciones para implementar ese modelo:
 
 Impacto:
 
-El modelo actual queda aprobado para pruebas y primer segmento. La decision abierta es si un alta de producto se manejara como solicitud puntual de servicio o si mas adelante conviene migrar a un catalogo dinamico.
+El modelo actual queda definido para pruebas y primer segmento. Si se solicita un producto nuevo, se tratara como solicitud puntual de servicio/evolutivo; el modelo dinamico queda como referencia tecnica para una etapa posterior.
 
 ### Registro de clicks
 
-Decision a confirmar:
+Validacion requerida:
 
 Donde se registraran los clicks por cotizador: DANA, Lambda, otro servicio o una combinacion.
 
@@ -219,7 +219,7 @@ Esto define si el frontend abre un link directo de DANA, un link de la Lambda o 
 
 ### Destino de solicitudes de actualizacion
 
-Decision a confirmar:
+Validacion requerida:
 
 Si las solicitudes de actualizacion que hace el asesor desde el microsite deben ir a un servicio del banco, a una lista/flujo de DANA o a otro proceso operativo.
 
@@ -233,7 +233,7 @@ Registrar la solicitud como evento y enviarla al flujo que cliente defina. Los c
 
 ### Proceso oficial para publicar cambios
 
-Decision a confirmar:
+Validacion requerida:
 
 Como se procesaran las actualizaciones solicitadas por el asesor antes de reflejarse en el microsite.
 
@@ -259,7 +259,7 @@ El microsite solo registra la solicitud. El dato visible en produccion cambia cu
 
 ### Retencion de eventos operativos
 
-Decision a confirmar:
+Validacion requerida:
 
 Si el proyecto debe guardar historico de eventos operativos, y por cuanto tiempo.
 
@@ -281,7 +281,7 @@ Guardar solo lo necesario para operar el flujo actual y conservar el snapshot de
 
 ### Enlace permanente publico
 
-Decision a confirmar:
+Validacion requerida:
 
 Confirmar que el enlace permanente del asesor sera publico, sin login.
 
@@ -295,4 +295,4 @@ La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el 
 
 Limite del control:
 
-Esto reduce exposicion del identificador real, pero no equivale a autenticacion. Si cliente necesita acceso privado, habria que agregar otro mecanismo de seguridad.
+Esto reduce exposicion del identificador real, pero no equivale a autenticacion. Si cliente necesita acceso privado, se requiere definir un mecanismo adicional de seguridad.

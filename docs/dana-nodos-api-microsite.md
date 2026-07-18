@@ -64,7 +64,7 @@ Este request no envia `MICROSITEID` ni `MICROSITEURL`. La Lambda los genera y lo
 }
 ```
 
-## 1. POST generar
+## 1. UPDATE generar
 
 Este nodo Update es el unico que escribe `MICROSITEID` y `MICROSITEURL`, porque en generacion DANA todavia no los tiene.
 
@@ -269,7 +269,7 @@ COTIZADOR_PRODUCTO
 COTIZADOR_PRODUCTO_URL
 ```
 
-Este modelo es facil de auditar para un segmento pequeno y es razonable si el catalogo de seguros no cambia con frecuencia. Si se agrega un producto nuevo, debe tratarse como una solicitud de servicio/evolutivo porque hoy habria que:
+Este modelo es facil de auditar para un segmento pequeno y es el alcance definido para el piloto. Si se agrega un producto nuevo, debe tratarse como una solicitud de servicio/evolutivo porque hoy requiere:
 
 - Crear los campos nuevos en DANA.
 - Agregar esos campos al POST generar.
@@ -278,9 +278,9 @@ Este modelo es facil de auditar para un segmento pequeno y es razonable si el ca
 - Agregar el producto al mapeo de la Lambda.
 - Agregar el producto/catalogo visual en el frontend.
 
-Por eso, si Mercantil espera agregar productos con frecuencia, conviene evaluar el modelo dinamico descrito abajo. Si el cambio es ocasional, el modelo actual puede mantenerse y el alta de producto se atiende como cambio controlado.
+Para esta etapa, el modelo actual puede mantenerse y el alta de producto se atiende como cambio controlado. El modelo dinamico queda documentado como referencia tecnica para una etapa posterior.
 
-### Modelo recomendado si el catalogo cambia frecuentemente
+### Modelo dinamico de referencia
 
 Mover los cotizadores a un modelo dinamico controlado por DANA.
 
@@ -336,7 +336,7 @@ UID,NombreAsesor,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,Microsit
 
 Notas importantes:
 
-- `NombreAsesor` debe ir sin espacios al inicio o al final para evitar problemas de automapeo en DANA.
+- `NombreAsesor` debe ir sin espacios al inicio o al final para conservar el automapeo en DANA.
 - En registros nuevos para generar, deben venir vacios `Update`, `MicrositeID`, `MicrositeURL`, `response_microsite`, `response_actualizacion`, `response_baja` y `Micrositeactivado`.
 - El nodo API de generar devuelve `micrositeId` y `micrositeUrl`; el nodo Update de DANA los escribe en `MicrositeID` y `MicrositeURL`.
 - En actualizaciones, `MicrositeID` y `MicrositeURL` ya deben venir poblados y no deben reescribirse desde el nodo Update.
