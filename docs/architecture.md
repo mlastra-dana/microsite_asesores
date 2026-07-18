@@ -39,6 +39,8 @@ DANAconnect es la fuente principal para los datos del asesor. La lista de contac
 - `MICROSITEID`: identificador interno del microsite en DANA. Puede cargarse vacio; la Lambda lo genera durante la activacion si no existe. No se expone directamente en la URL publica.
 - `MICROSITEURL`: enlace permanente del microsite.
 - `MICROSITEACTIVADO`: bandera `SI`/`NO` para marcar que el perfil ya fue preparado.
+- `RESPONSE_MICROSITE`: resultado textual devuelto por la Lambda para auditoria operativa.
+- `UPDATE`: campo de control del flujo. Lo escriben los nodos Update de DANA, no la Lambda.
 - `NOMBREASESOR`
 - `EMAILASESOR`
 - `TELEFONOASESOR`
@@ -67,6 +69,28 @@ El cliente debe cargar en DANA la informacion basica, el `ADVISORID` unico y las
 
 Si DANA borra `MICROSITEID` y vuelve a enviar el mismo contacto, la Lambda regenera el mismo `MICROSITEID` y el mismo `PUBLICID` mientras `ADVISORID` se mantenga igual.
 
+Estados operativos acordados:
+
+```text
+Nuevo pendiente:
+  MICROSITEACTIVADO vacio
+  UPDATE vacio
+
+Generado:
+  MICROSITEACTIVADO SI
+  UPDATE GENERADO
+
+Actualizado:
+  MICROSITEACTIVADO SI
+  UPDATE ACTUALIZADO
+
+Desactivado:
+  MICROSITEACTIVADO NO
+  UPDATE DESACTIVADO
+```
+
+Los nodos API no escriben `UPDATE`. Ese campo se actualiza en los nodos Update finales de DANA para cerrar cada rama del flujo.
+
 El archivo `docs/dana-microsite-asesores-demo.csv` contiene contactos de prueba listos para cargar en DANA.
 
 Plantillas de correo:
@@ -90,6 +114,8 @@ DynamoDB es necesario para que el enlace limpio `/asesor/{PUBLICID}` funcione en
 ## Importante
 
 La demo frontend debe seguir funcionando sin backend real. Si `VITE_API_URL` no existe, los eventos se guardan en `localStorage`.
+
+Por auditoria, esta etapa no borra registros de DynamoDB automaticamente. Si un asesor ya no debe cargar, la baja se ejecuta con el flujo de desactivacion y el enlace permanente queda respondiendo como microsite inactivo.
 
 ## Variables Lambda
 

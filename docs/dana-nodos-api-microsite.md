@@ -57,6 +57,8 @@ Este request no envia `MICROSITEID` ni `MICROSITEURL`. La Lambda los genera y lo
 
 ## 1. UPDATE generar
 
+Este nodo Update es el unico que escribe `MICROSITEID` y `MICROSITEURL`, porque en generacion DANA todavia no los tiene.
+
 ```text
 MICROSITEID        $.micrositeId
 MICROSITEURL       $.micrositeUrl
@@ -99,6 +101,8 @@ Este request usa los valores actuales de `MICROSITEID` y `MICROSITEURL` que ya g
 
 ## 2. UPDATE actualizar
 
+Este nodo Update no modifica `MICROSITEID` ni `MICROSITEURL`; solo cierra el estado operativo y guarda el resultado.
+
 ```text
 MICROSITEACTIVADO  $.micrositeActivado
 RESPONSE_MICROSITE $.message
@@ -130,6 +134,8 @@ Esto permite que el flujo avance y no quede detenido en `UPDATE=ACTUALIZAR`.
 ```
 
 ## 3. UPDATE inactivar
+
+Este nodo Update no borra `MICROSITEID` ni `MICROSITEURL`; conserva trazabilidad del enlace que fue desactivado.
 
 ```text
 MICROSITEACTIVADO  $.micrositeActivado
@@ -163,32 +169,74 @@ Inactivar:
 }
 ```
 
-## 4. Conciliar Dynamo contra DANA
+## Significado de campos del response
 
-Este request sirve para revisar registros guardados en DynamoDB que ya no existan en la lista de contactos de DANA. Primero ejecutalo sin borrar.
-
-```json
-{
-  "type": "advisor_reconcile",
-  "limit": 250
-}
-```
-
-Response resumido:
+La Lambda devuelve campos planos para que DANA pueda mapearlos desde el nodo API hacia campos de la lista de contactos.
 
 ```text
-missingRecords  registros candidatos a borrar
-errorRecords    registros que no se pudieron validar con seguridad
+ok
+  Booleano. Indica si la Lambda proceso correctamente el request.
+
+message
+  Texto operativo para auditoria y para guardar en RESPONSE_MICROSITE.
+  Ejemplos:
+  - Microsite sincronizado correctamente
+  - Microsite sin cambios para actualizar
+  - Microsite inactivado correctamente
+
+type
+  Tipo de operacion procesada por la Lambda. Para este flujo debe ser advisor_sync.
+
+action
+  Accion recibida por la Lambda. upsert para generar/actualizar, deactivate para inactivar.
+
+advisorId
+  PUBLICID enmascarado. Es el identificador publico usado en la URL.
+  No es el ADVISORID de Mercantil ni el MICROSITEID interno.
+
+micrositeId
+  Identificador interno del microsite. Se guarda en DANA como MICROSITEID.
+  Si DANA lo envia vacio al generar, la Lambda lo crea de forma estable usando ADVISORID.
+
+micrositeUrl
+  URL publica y permanente del asesor.
+  Se guarda en DANA como MICROSITEURL y es el enlace que se envia en el correo.
+
+micrositeActivado
+  Estado operativo del microsite en formato SI/NO.
+  Se guarda en DANA como MICROSITEACTIVADO.
+
+source
+  Origen usado por la Lambda para armar el snapshot.
+  En el flujo actual debe ser direct_payload porque DANA envia los campos en el JSON.
 ```
 
-Cuando ya confirmes el resultado, se puede borrar solo lo que DANA reporte como inexistente:
+## Reglas de negocio cerradas
 
-```json
-{
-  "type": "advisor_reconcile",
-  "limit": 250,
-  "deleteMissing": true
-}
+```text
+GENERAR
+  Condicion: MICROSITEACTIVADO vacio y UPDATE vacio.
+  API node: envia datos del asesor sin MICROSITEID/MICROSITEURL.
+  Update node: escribe MICROSITEID, MICROSITEURL, MICROSITEACTIVADO, RESPONSE_MICROSITE y UPDATE=GENERADO.
+
+ACTUALIZAR
+  Condicion: MICROSITEACTIVADO=SI y UPDATE=ACTUALIZAR.
+  API node: envia datos del asesor incluyendo MICROSITEID/MICROSITEURL existentes.
+  Update node: no toca MICROSITEID ni MICROSITEURL; escribe MICROSITEACTIVADO, RESPONSE_MICROSITE y UPDATE=ACTUALIZADO.
+  Si no hay cambios, la Lambda responde OK y el flujo igual debe cerrar en ACTUALIZADO.
+
+DESACTIVAR
+  Condicion: MICROSITEACTIVADO=SI y UPDATE=DESACTIVAR.
+  API node: envia ADVISORID, MICROSITEID, MICROSITEURL y MICROSITEACTIVADO=NO.
+  Update node: no borra MICROSITEID ni MICROSITEURL; escribe MICROSITEACTIVADO=NO, RESPONSE_MICROSITE y UPDATE=DESACTIVADO.
+  El enlace permanente queda vivo como URL, pero el backend responde que el microsite no esta activo.
 ```
 
-La Lambda no borra registros cuando DANA devuelve un error ambiguo o temporal.
+## Preguntas abiertas para cliente/auditoria
+
+```text
+- Que debe ocurrir con snapshots existentes en Dynamo si un asesor desaparece de la lista de DANA.
+- Si la baja debe ser siempre explicita con UPDATE=DESACTIVAR o si se permitira una conciliacion posterior.
+- Periodicidad o evento oficial para refrescar cambios masivos desde DANA.
+- Donde se registraran los clicks por cotizador y si cada cotizador tendra URL propia por asesor.
+```

@@ -270,25 +270,15 @@ curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
 
 Tambien se mantiene compatibilidad con `"dana":"E-xlhBFw__valorReal"` si algun flujo necesita que la Lambda consulte Data Retrieval, pero no es necesario para el flujo recomendado.
 
-Conciliar DynamoDB contra DANA sin borrar:
+El campo `UPDATE` no lo modifica la Lambda. Ese estado lo escriben los nodos Update de DANA al final de cada rama:
 
 ```bash
-curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
-  -H "Content-Type: application/json" \
-  -d '{"type":"advisor_reconcile","limit":250}'
+GENERADO
+ACTUALIZADO
+DESACTIVADO
 ```
 
-Ese request revisa los registros guardados en DynamoDB contra DANA usando el `ADVISORID`/identificador operativo y devuelve `missingRecords` y `errorRecords`.
-
-Borrar solo los registros que DANA reporte como inexistentes:
-
-```bash
-curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
-  -H "Content-Type: application/json" \
-  -d '{"type":"advisor_reconcile","limit":250,"deleteMissing":true}'
-```
-
-La Lambda no borra registros cuando DANA devuelve un error ambiguo o temporal; esos quedan en `errorRecords` para revision manual.
+Por auditoria, esta version no borra registros de DynamoDB. Si un asesor deja de existir o debe salir de servicio, el flujo operativo esperado es ejecutar `advisor_sync` con `action=deactivate` para dejar `micrositeActive=false`.
 
 ## Conectar con Amplify
 
@@ -311,8 +301,6 @@ Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda
 `landing_provision`: provisionamiento del microsite desde Data Retrieval API o DANAconnect.
 
 `advisor_sync`: sincronizacion operativa desde DANAconnect para altas, actualizaciones e inactivaciones.
-
-`advisor_reconcile`: conciliacion operativa para detectar snapshots en DynamoDB que ya no existen en DANAconnect y, si se pide explicitamente, borrarlos.
 
 ## Roadmap backend
 
@@ -340,32 +328,9 @@ Para version con persistencia de eventos:
   - `dynamodb:PutItem`
   - `dynamodb:GetItem`
   - `dynamodb:UpdateItem`
-  - `dynamodb:Scan`
-  - `dynamodb:DeleteItem`
   - `logs:CreateLogGroup`
   - `logs:CreateLogStream`
   - `logs:PutLogEvents`
-
-Politica base para la tabla `MicrositeAdvisors`:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:GetItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:Scan",
-        "dynamodb:DeleteItem"
-      ],
-      "Resource": "arn:aws:dynamodb:us-east-1:905418296062:table/MicrositeAdvisors"
-    }
-  ]
-}
-```
 
 Modelo simple sugerido para DynamoDB:
 
