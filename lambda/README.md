@@ -82,9 +82,7 @@ MICROSITEURL
 MICROSITEACTIVADO=SI
 ```
 
-`MICROSITEID` queda como dato interno en DANA. `MICROSITEURL` queda como el enlace publico enmascarado, por ejemplo `/asesor/3A8F...`, y es el valor que debe usar el segundo correo.
-
-Ese Trigger permite que DANA continue el flujo y envie el segundo correo con el enlace permanente.
+`MICROSITEID` queda como dato interno en DANA. `MICROSITEURL` queda como el enlace publico enmascarado, por ejemplo `/asesor/3A8F...`, y es el valor que debe usar el correo con el enlace permanente.
 
 Para produccion, `MICROSITE_ID_SECRET` debe ser una cadena privada y estable. Si se cambia despues de activar asesores, los nuevos IDs generados para registros sin `MICROSITEID` podrian cambiar. Los asesores ya activados conservan el `MICROSITEID` guardado en DANA.
 
@@ -94,7 +92,7 @@ Necesaria para resolver enlaces permanentes:
 DYNAMODB_TABLE=MicrositeAdvisors
 ```
 
-La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde al `PUBLICID` publico, no al `MICROSITEID` interno. Durante el primer acceso desde DANA, la Lambda guarda el registro normalizado en DynamoDB junto con el `danaIdentifier` y el `micrositeId` interno.
+La tabla debe tener partition key `advisorId` tipo string. Ese valor corresponde al `PUBLICID` publico, no al `MICROSITEID` interno. El flujo API de DANAconnect llama `advisor_sync`, la Lambda guarda el registro normalizado en DynamoDB junto con el identificador operativo y el `micrositeId` interno, y luego DANA guarda la respuesta en su lista de contactos.
 
 Luego `/asesor/{PUBLICID}` funciona asi:
 
@@ -272,6 +270,26 @@ curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
 
 Tambien se mantiene compatibilidad con `"dana":"E-xlhBFw__valorReal"` si algun flujo necesita que la Lambda consulte Data Retrieval, pero no es necesario para el flujo recomendado.
 
+Conciliar DynamoDB contra DANA sin borrar:
+
+```bash
+curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"advisor_reconcile","limit":250}'
+```
+
+Ese request revisa los registros guardados en DynamoDB contra DANA usando el `ADVISORID`/identificador operativo y devuelve `missingRecords` y `errorRecords`.
+
+Borrar solo los registros que DANA reporte como inexistentes:
+
+```bash
+curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"advisor_reconcile","limit":250,"deleteMissing":true}'
+```
+
+La Lambda no borra registros cuando DANA devuelve un error ambiguo o temporal; esos quedan en `errorRecords` para revision manual.
+
 ## Conectar con Amplify
 
 En AWS Amplify, agrega una variable de entorno:
@@ -293,6 +311,8 @@ Luego vuelve a desplegar la app. Si `VITE_API_URL` no existe, el frontend guarda
 `landing_provision`: provisionamiento del microsite desde Data Retrieval API o DANAconnect.
 
 `advisor_sync`: sincronizacion operativa desde DANAconnect para altas, actualizaciones e inactivaciones.
+
+`advisor_reconcile`: conciliacion operativa para detectar snapshots en DynamoDB que ya no existen en DANAconnect y, si se pide explicitamente, borrarlos.
 
 ## Roadmap backend
 
@@ -320,9 +340,32 @@ Para version con persistencia de eventos:
   - `dynamodb:PutItem`
   - `dynamodb:GetItem`
   - `dynamodb:UpdateItem`
+  - `dynamodb:Scan`
+  - `dynamodb:DeleteItem`
   - `logs:CreateLogGroup`
   - `logs:CreateLogStream`
   - `logs:PutLogEvents`
+
+Politica base para la tabla `MicrositeAdvisors`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:Scan",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:905418296062:table/MicrositeAdvisors"
+    }
+  ]
+}
+```
 
 Modelo simple sugerido para DynamoDB:
 

@@ -171,7 +171,20 @@ export default function MicrositePage() {
     <div className="min-h-screen bg-dana-cloud">
       {advisor && <Header advisor={advisor} />}
       <main>
-        {!advisor && (
+        {!advisor && isLoadingAdvisor && (
+          <section className="flex min-h-screen items-center justify-center px-4 py-16">
+            <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-mercantil-blue" />
+              <h1 className="mt-5 text-2xl font-extrabold text-dana-ink">
+                Cargando microsite
+              </h1>
+              <p className="mt-3 text-dana-muted">
+                Estamos preparando la información del asesor.
+              </p>
+            </div>
+          </section>
+        )}
+        {!advisor && !isLoadingAdvisor && (
           <section className="flex min-h-screen items-center justify-center px-4 py-16">
             <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl font-black text-red-500">
@@ -181,9 +194,7 @@ export default function MicrositePage() {
                 No pudimos cargar este microsite
               </h1>
               <p className="mt-3 text-dana-muted">
-                {isLoadingAdvisor
-                  ? 'Estamos consultando la informacion del asesor en DANAconnect.'
-                  : advisorError || 'No encontramos informacion vigente para este enlace.'}
+                {advisorError || 'No encontramos informacion vigente para este enlace.'}
               </p>
             </div>
           </section>

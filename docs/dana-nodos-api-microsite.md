@@ -15,14 +15,14 @@ Headers:
 }
 ```
 
-## Enrutamiento por campo UPDATE
+## Enrutamiento por campos de control
 
-Usa el campo `UPDATE` de la lista de contactos para decidir que nodo API ejecutar:
+Usa `MICROSITEACTIVADO` y `UPDATE` para que los flujos no se pisen entre si:
 
 ```text
-UPDATE = GENERAR      -> POST generar
-UPDATE = ACTUALIZAR   -> POST actualizar
-UPDATE = DESACTIVAR   -> POST inactivar
+MICROSITEACTIVADO vacio + UPDATE vacio        -> POST generar
+MICROSITEACTIVADO = SI + UPDATE = ACTUALIZAR  -> POST actualizar
+MICROSITEACTIVADO = SI + UPDATE = DESACTIVAR  -> POST inactivar
 ```
 
 ## 1. POST generar
@@ -62,7 +62,7 @@ MICROSITEID        $.micrositeId
 MICROSITEURL       $.micrositeUrl
 MICROSITEACTIVADO  $.micrositeActivado
 RESPONSE_MICROSITE $.message
-UPDATE             ACTUALIZAR
+UPDATE             GENERADO
 ```
 
 ## 2. POST actualizar
@@ -104,7 +104,7 @@ MICROSITEID        $.micrositeId
 MICROSITEURL       $.micrositeUrl
 MICROSITEACTIVADO  $.micrositeActivado
 RESPONSE_MICROSITE $.message
-UPDATE             ACTUALIZAR
+UPDATE             ACTUALIZADO
 ```
 
 ## 3. POST inactivar
@@ -125,7 +125,7 @@ UPDATE             ACTUALIZAR
 ```text
 MICROSITEACTIVADO  $.micrositeActivado
 RESPONSE_MICROSITE $.message
-UPDATE             DESACTIVAR
+UPDATE             DESACTIVADO
 ```
 
 ## Response esperado
@@ -153,3 +153,33 @@ Inactivar:
   "micrositeActivado": "NO"
 }
 ```
+
+## 4. Conciliar Dynamo contra DANA
+
+Este request sirve para revisar registros guardados en DynamoDB que ya no existan en la lista de contactos de DANA. Primero ejecutalo sin borrar.
+
+```json
+{
+  "type": "advisor_reconcile",
+  "limit": 250
+}
+```
+
+Response resumido:
+
+```text
+missingRecords  registros candidatos a borrar
+errorRecords    registros que no se pudieron validar con seguridad
+```
+
+Cuando ya confirmes el resultado, se puede borrar solo lo que DANA reporte como inexistente:
+
+```json
+{
+  "type": "advisor_reconcile",
+  "limit": 250,
+  "deleteMissing": true
+}
+```
+
+La Lambda no borra registros cuando DANA devuelve un error ambiguo o temporal.

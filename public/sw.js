@@ -19,8 +19,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   if (event.request.mode === 'navigate') {
+    const url = new URL(event.request.url);
+    const isAppRoute = url.origin === self.location.origin && url.pathname.startsWith('/asesor/');
+    const appShellRequest = isAppRoute ? '/' : event.request;
+
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/')),
+      fetch(appShellRequest).catch(() => caches.match('/')),
     );
     return;
   }
