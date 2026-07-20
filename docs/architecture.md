@@ -138,7 +138,7 @@ Por auditoria, esta etapa no borra registros de DynamoDB automaticamente. Si un 
 - `DANA_OAUTH_AUTH_METHOD`: `basic` o `body`, segun como DANA espere las credenciales.
 - `DANA_BASE_URL`: por defecto `https://appserv.danaconnect.com`.
 - `DANA_DATA_FIELDS`: campos a pedir a DANAconnect.
-- `DANA_FIELDS_QUERY_PARAM`: nombre del query parameter para pedir campos; por defecto `fields`.
+- `DANA_FIELDS_QUERY_PARAM`: nombre del query parameter para pedir campos cuando se usa Data Retrieval v2 con Bearer/OAuth; por defecto `fieldList`. Si se configura `DANA_USERNAME` y `DANA_PASSWORD`, la Lambda usa Data Retrieval v1 y fuerza el parametro `fields`.
 - `MICROSITE_BASE_URL`: dominio publico de Amplify o dominio custom.
 - `MICROSITE_ID_SECRET`: llave privada estable para generar `MICROSITEID` opacos cuando DANA no los trae.
 - `DYNAMODB_TABLE`: tabla donde guardar registros y eventos.

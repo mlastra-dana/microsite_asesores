@@ -132,21 +132,18 @@ Luego `/asesor/{PUBLICID}` funciona asi:
 
 ## Data Retrieval API usada como compatibilidad
 
-La Lambda llama:
+El flujo productivo recomendado usa `advisor_sync` con payload completo desde los nodos API de DANA y guarda el snapshot en DynamoDB.
 
-```bash
-GET https://appserv.danaconnect.com/api/2.0/rest/conversation/data/:danaparam?fields=EMAIL,NAME,PHONE_NUMBER
-Authorization: Bearer <access_token>
-Accept: application/json
-```
+Data Retrieval queda como compatibilidad cuando la Lambda recibe un `dana`/`danaparam` real y debe consultar el contacto en DANA.
 
-Los campos se controlan con `DANA_DATA_FIELDS`. La documentacion tambien menciona `fieldList` como query parameter; por eso el nombre del parametro queda configurable con `DANA_FIELDS_QUERY_PARAM`. El curl de ejemplo oficial usa `fields`, que es el valor por defecto de esta Lambda.
+Resumen de implementacion:
 
-La Lambda obtiene el Bearer token asi:
+- Con `DANA_USERNAME` y `DANA_PASSWORD`, la Lambda usa API v1, Basic Auth y query parameter `fields`.
+- Sin `DANA_USERNAME`/`DANA_PASSWORD`, la Lambda usa API v2 con Bearer/OAuth y `DANA_FIELDS_QUERY_PARAM`.
 
-1. Si existe `DANA_ACCESS_TOKEN`, usa ese token directamente.
-2. Si no existe, pide un token con `DANA_TOKEN_URL`, `DANA_CLIENT_ID` y `DANA_CLIENT_SECRET`.
-3. Guarda el token en cache de memoria hasta casi su expiracion.
+Detalle completo en:
+
+`docs/dana-data-retrieval.md`
 
 ## Provisionar un microsite
 
