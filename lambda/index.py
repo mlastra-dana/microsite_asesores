@@ -22,6 +22,15 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 }
 
+SECURITY_HEADERS = {
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Cache-Control": "no-store",
+}
+
 DANA_TOKEN_URL = os.environ.get("DANA_TOKEN_URL", "https://auth.danaconnect.com/oauth2/token")
 DANA_ACCESS_TOKEN = os.environ.get("DANA_ACCESS_TOKEN", "")
 DANA_CLIENT_ID = os.environ.get("DANA_CLIENT_ID", "")
@@ -83,9 +92,19 @@ def json_default(value):
 def response(status_code, body):
     return {
         "statusCode": status_code,
-        "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+        "headers": {**CORS_HEADERS, **SECURITY_HEADERS, "Content-Type": "application/json"},
         "body": json.dumps(body, ensure_ascii=False, default=json_default),
     }
+
+
+def public_error(status_code, message, error_type="request_error", **extra):
+    body = {
+        "ok": False,
+        "message": message,
+        "type": error_type,
+    }
+    body.update(extra)
+    return response(status_code, body)
 
 
 def parse_body(event):
@@ -418,6 +437,90 @@ def is_enabled(value):
 
 def is_disabled(value):
     return str(value or "").strip().upper() in ("NO", "FALSE", "0", "N")
+
+
+def trimmed(value):
+    return str(value or "").strip()
+
+
+def field_value(payload, *names):
+    advisor = payload.get("advisor") if isinstance(payload.get("advisor"), dict) else {}
+
+    for name in names:
+        value = payload.get(name)
+        if value not in (None, ""):
+            return value
+
+        value = advisor.get(name)
+        if value not in (None, ""):
+            return value
+
+    return ""
+
+
+def is_dangerous_url(value):
+    normalized = trimmed(value).lower()
+    return normalized.startswith(("javascript:", "data:", "vbscript:"))
+
+
+def is_https_url(value):
+    normalized = trimmed(value).lower()
+    return not normalized or normalized.startswith("https://")
+
+
+def validate_length(errors, payload, field_name, max_length, *aliases):
+    value = field_value(payload, field_name, *aliases)
+
+    if value not in (None, "") and len(str(value)) > max_length:
+        errors.append(f"{field_name} excede {max_length} caracteres")
+
+
+def validate_url_field(errors, payload, field_name, require_https=False):
+    value = field_value(payload, field_name)
+
+    if not value:
+        return
+
+    if is_dangerous_url(value):
+        errors.append(f"{field_name} no permite esquemas peligrosos")
+        return
+
+    if require_https and not is_https_url(value):
+        errors.append(f"{field_name} debe iniciar con https://")
+
+
+def validate_advisor_payload(payload):
+    errors = []
+
+    validate_length(errors, payload, "ADVISORID", 50, "AdvisorId", "internalAdvisorId")
+    validate_length(errors, payload, "NOMBREASESOR", 300, "NombreAsesor", "name")
+    validate_length(errors, payload, "EMAILASESOR", 254, "EmailAsesor", "email")
+    validate_length(errors, payload, "TELEFONOASESOR", 30, "TelefonoAsesor", "phone")
+    validate_length(errors, payload, "CIUDADASESOR", 100, "CiudadAsesor", "city")
+    validate_length(errors, payload, "BIOASESOR", 1000, "BioAsesor", "bio")
+    validate_length(errors, payload, "WEBSITEASESOR", 200, "WebsiteAsesor", "website")
+    validate_length(errors, payload, "CONTACTOASESOR", 500, "ContactoAsesor", "contactUrl")
+    validate_length(errors, payload, "FOTOASESOR", 500, "FotoAsesor", "photoUrl")
+
+    email = trimmed(field_value(payload, "EMAILASESOR", "EmailAsesor", "email"))
+    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        errors.append("EMAILASESOR no tiene formato valido")
+
+    active_value = trimmed(field_value(payload, "MICROSITEACTIVADO", "micrositeActive"))
+    if active_value and not (is_enabled(active_value) or is_disabled(active_value)):
+        errors.append("MICROSITEACTIVADO debe ser SI o NO")
+
+    validate_url_field(errors, payload, "CONTACTOASESOR", require_https=True)
+    validate_url_field(errors, payload, "FOTOASESOR", require_https=True)
+
+    website = field_value(payload, "WEBSITEASESOR", "WebsiteAsesor", "website")
+    if is_dangerous_url(website):
+        errors.append("WEBSITEASESOR no permite esquemas peligrosos")
+
+    for _field_code, url_field_code, _product_title in PRODUCT_FLAG_FIELDS:
+        validate_url_field(errors, payload, url_field_code, require_https=True)
+
+    return errors
 
 
 def products_from_flags(data):
@@ -797,6 +900,56 @@ def advisor_sync_response(record, action, active, message, source=""):
     return response(200, body)
 
 
+PUBLIC_ADVISOR_FIELDS = (
+    "name",
+    "email",
+    "phone",
+    "whatsapp",
+    "city",
+    "advisorCode",
+    "role",
+    "photoUrl",
+    "bio",
+    "products",
+    "productLinks",
+    "website",
+    "contactUrl",
+    "micrositeActive",
+)
+
+
+def public_advisor(advisor):
+    if not isinstance(advisor, dict):
+        return {}
+
+    public_data = {
+        field: advisor.get(field)
+        for field in PUBLIC_ADVISOR_FIELDS
+        if advisor.get(field) not in (None, "")
+    }
+
+    public_data.setdefault("products", [])
+    public_data.setdefault("productLinks", {})
+
+    return public_data
+
+
+def public_record_response(record, response_type, message=""):
+    advisor_id = record.get("advisorId")
+    body = {
+        "ok": True,
+        "advisorId": advisor_id,
+        "type": response_type,
+        "micrositeUrl": record.get("micrositeUrl"),
+        "advisor": public_advisor(record.get("advisor")),
+    }
+
+    if message:
+        body["message"] = message
+
+    return body
+
+
 def comparable_record(record):
     advisor = record.get("advisor") if isinstance(record, dict) else {}
 
@@ -942,13 +1095,11 @@ def handle_landing_provision(payload):
 
     return response(
         200,
-        {
-            "ok": True,
-            "message": "Microsite preparado correctamente",
-            "type": "landing_provision",
-            **record,
-            "persistence": persistence,
-        },
+        public_record_response(
+            record,
+            "landing_provision",
+            "Microsite preparado correctamente",
+        ),
     )
 
 
@@ -984,12 +1135,12 @@ def handle_microsite_activate(payload):
     return response(
         200,
         {
-            "ok": True,
-            "message": "Microsite provisionado correctamente",
-            "type": "microsite_activate",
-            **record,
-            "persistence": persistence,
-            "trigger": trigger_result,
+            **public_record_response(
+                record,
+                "microsite_activate",
+                "Microsite provisionado correctamente",
+            ),
+            "micrositeId": record.get("micrositeId"),
         },
     )
 
@@ -1083,6 +1234,16 @@ def handle_advisor_sync(payload):
                 "action": action,
             })
 
+        validation_errors = validate_advisor_payload(payload)
+        if validation_errors:
+            return response(400, {
+                "ok": False,
+                "message": "Datos de asesor invalidos",
+                "type": "advisor_sync",
+                "action": action,
+                "errors": validation_errors,
+            })
+
         record = create_advisor_record_from_payload(payload)
         source = "direct_payload"
 
@@ -1173,13 +1334,7 @@ def handle_get_advisor(query):
             "advisorId": advisor_id,
         })
 
-    return response(200, {
-        "ok": True,
-        "advisorId": advisor_id,
-        "type": "get_advisor",
-        **record,
-        "refresh": refresh_status,
-    })
+    return response(200, public_record_response(record, "get_advisor"))
 
 
 def handle_simple_event(payload):
@@ -1259,34 +1414,28 @@ def lambda_handler(event, context):
                 })
             except Exception as error:
                 print("landing_provision_error:", str(error))
-                return response(502, {
-                    "ok": False,
-                    "message": str(error),
-                    "type": "landing_provision",
-                })
+                return public_error(
+                    502,
+                    "No se pudo preparar el microsite.",
+                    "landing_provision",
+                )
 
         if advisor_id:
             try:
                 return handle_get_advisor(query)
             except Exception as error:
                 print("get_advisor_error:", str(error))
-                return response(502, {
-                    "ok": False,
-                    "message": str(error),
-                    "type": "get_advisor",
-                })
+                return public_error(
+                    502,
+                    "No se pudo consultar este microsite.",
+                    "get_advisor",
+                )
 
         return response(
             200,
             {
                 "ok": True,
-                "message": "Microsite Lambda activa",
-                "usage": {
-                    "landing_provision_get": "GET ?dana=VALOR_DANA_PARAM_REAL",
-                    "landing_provision_post": "POST { type: 'landing_provision', dana: 'VALOR_DANA_PARAM_REAL' }",
-                    "advisor_sync": "POST { type: 'advisor_sync', action: 'upsert|deactivate', ADVISORID: 'CODIGO_MERCANTIL', ...campos }",
-                    "get_advisor": "GET ?advisorId=PUBLICID_ENMASCARADO",
-                },
+                "message": "Microsite API activa",
             },
         )
 
@@ -1320,8 +1469,8 @@ def lambda_handler(event, context):
 
     except Exception as error:
         print("lambda_error:", str(error))
-        return response(502, {
-            "ok": False,
-            "message": str(error),
-            "type": event_type,
-        })
+        return public_error(
+            502,
+            "No se pudo procesar la solicitud.",
+            event_type or "request_error",
+        )

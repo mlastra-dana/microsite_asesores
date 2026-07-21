@@ -1,5 +1,5 @@
 export type Advisor = {
-  advisorId: string;
+  advisorId?: string;
   internalAdvisorId?: string;
   company?: string;
   name: string;

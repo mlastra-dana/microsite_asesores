@@ -26,7 +26,7 @@ function emptyAdvisor(id?: string): Advisor {
 function toPageAdvisor(apiAdvisor: ApiAdvisor, fallback: Advisor): Advisor {
   return {
     ...fallback,
-    id: apiAdvisor.advisorId || fallback.id,
+    id: fallback.id,
     company: apiAdvisor.company || fallback.company,
     name: apiAdvisor.name || fallback.name,
     role: apiAdvisor.role || fallback.role,
