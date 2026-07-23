@@ -262,14 +262,14 @@ El frontend muestra solo los cotizadores habilitados por bandera `SI` que tambie
 
 ### Modelo actual
 
-En el piloto/primer segmento, cada producto tiene campos fijos en DANA:
+En el alcance actual, cada producto tiene campos fijos en DANA:
 
 ```text
 COTIZADOR_PRODUCTO
 COTIZADOR_PRODUCTO_URL
 ```
 
-Este modelo es facil de auditar para un segmento pequeno y es el alcance definido para el piloto. Si se agrega un producto nuevo, debe tratarse como una solicitud de servicio/evolutivo porque hoy requiere:
+Este modelo es facil de auditar para un segmento definido de asesores y es el alcance operativo actual. Si se agrega un producto nuevo, debe tratarse como una solicitud de servicio/evolutivo porque hoy requiere:
 
 - Crear los campos nuevos en DANA.
 - Agregar esos campos al POST generar.

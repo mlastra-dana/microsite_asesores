@@ -115,7 +115,7 @@ El camino que si dio visibilidad fue trabajar con un `dana` real y consultar la 
 
 ## Recomendacion operativa
 
-Para el piloto/producto actual:
+Para el producto actual:
 
 ```bash
 DANA_REFRESH_ON_GET=false
@@ -150,4 +150,3 @@ Notas:
 - Si `DANA_USERNAME` y `DANA_PASSWORD` existen, se usa v1 Basic con `fields`.
 - Si no existen, se usa v2 Bearer/OAuth con `DANA_FIELDS_QUERY_PARAM`.
 - `DANA_FIELDS_QUERY_PARAM` no afecta el camino v1 Basic.
-

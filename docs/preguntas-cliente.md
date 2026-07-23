@@ -1,8 +1,8 @@
 # Validaciones de negocio y operacion
 
-Este documento separa lo que ya esta definido para el piloto de lo que conviene validar en reunion. La idea es que la conversacion sea fluida: primero decisiones de negocio con cliente, luego detalles operativos con la KAM/DANA.
+Este documento separa lo que ya esta definido para el alcance actual de lo que conviene validar en reunion. La idea es que la conversacion sea fluida: primero decisiones de negocio con cliente, luego detalles operativos con la KAM/DANA.
 
-## Decisiones cerradas para el piloto
+## Decisiones cerradas para el alcance actual
 
 ### `ADVISORID`
 
@@ -10,7 +10,7 @@ Este documento separa lo que ya esta definido para el piloto de lo que conviene 
 
 Es el identificador unico del asesor dentro del negocio. Se puede mostrar dentro del microsite como codigo del asesor, pero no se usa directamente como identificador publico de la URL.
 
-### Enlace permanente sin login
+### Enlace permanente publico controlado
 
 El microsite del asesor sera accesible sin login.
 
@@ -22,13 +22,20 @@ La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el 
 
 Esto es importante porque el `ADVISORID` de Mercantil es un identificador interno del negocio y puede seguir una logica conocida o secuencial. Si ese valor se usara directamente en la URL, un asesor podria intentar deducir enlaces de otros asesores. Con el `PUBLICID` enmascarado, la URL publica no permite inferir el codigo real ni avanzar por una secuencia.
 
+Control aplicado:
+
+- El enlace permanente no usa el `ADVISORID` real.
+- El enlace permanente no usa el `MICROSITEID` interno.
+- La URL publica usa un `PUBLICID` enmascarado, no secuencial y generado por la Lambda.
+- Si el asesor se desactiva, el registro queda marcado como inactivo y el microsite no muestra la informacion operativa.
+
 Alcance del control:
 
-El enlace funciona como una URL publica. El enmascaramiento reduce exposicion de identificadores internos, pero no convierte el microsite en un portal autenticado.
+El enlace funciona como una URL publica del perfil comercial del asesor. El control principal es evitar enumeracion, deduccion de enlaces y exposicion de identificadores internos. No se plantea login en esta etapa porque el cliente ya cuenta con un portal de asesores para experiencias autenticadas.
 
-Recomendacion:
+Recomendacion tecnica:
 
-Mantener el modelo sin login para esta etapa. Si mas adelante Mercantil requiere una capa adicional, evaluar controles ligeros que no dupliquen el portal actual, por ejemplo enlaces firmados, expiracion opcional para acciones sensibles o validaciones solo en formularios internos.
+Mantener el modelo de enlace publico enmascarado. Como mejora de seguridad de backend, proteger los POST administrativos de DANA hacia la Lambda con un header secreto o API key para que solo los flujos autorizados puedan generar, actualizar o desactivar microsites.
 
 ### Fuente operativa del microsite
 
@@ -154,7 +161,7 @@ Definir si el alta de un producto/cotizador nuevo se manejara como solicitud pun
 
 Por que importa:
 
-Hoy cada producto tiene campos especificos en DANA para habilitarlo y guardar su URL. Este modelo es adecuado para el piloto y para un segmento controlado de asesores. Si aparece un producto nuevo, requiere crear campos en DANA, ajustar nodos API, actualizar Lambda/frontend y validar el flujo.
+Hoy cada producto tiene campos especificos en DANA para habilitarlo y guardar su URL. Este modelo es adecuado para el alcance actual y para un segmento definido de asesores. Si aparece un producto nuevo, requiere crear campos en DANA, ajustar nodos API, actualizar Lambda/frontend y validar el flujo.
 
 Criterio actual:
 

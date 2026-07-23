@@ -18,7 +18,8 @@ El flujo productivo actual usa DANAconnect como fuente operativa de datos, AWS L
 
 - `docs/dana-nodos-api-microsite.md`: contrato operativo de nodos DANA, JSONs y response mapping.
 - `docs/architecture.md`: direccion tecnica y reglas de negocio acordadas.
-- `docs/preguntas-cliente.md`: preguntas abiertas para cliente/auditoria.
+- `docs/preguntas-cliente.md`: decisiones cerradas y puntos por validar con cliente/KAM.
+- `docs/respuestas-reunion-microsite.md`: documento ejecutivo listo para reunion/Word con preguntas y respuestas.
 - `lambda/README.md`: variables de entorno, endpoints y permisos de AWS.
 
 ## Instalar y correr
