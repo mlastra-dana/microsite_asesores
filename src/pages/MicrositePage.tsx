@@ -4,8 +4,8 @@ import AdvisorCard from '../components/AdvisorCard';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import { getAdvisorById, hasAdvisorById, type Advisor } from '../data/advisors';
-import { products } from '../data/products';
-import { fetchAdvisorById, provisionAdvisor, type Advisor as ApiAdvisor } from '../utils/api';
+import { products, type Product } from '../data/products';
+import { fetchAdvisorById, provisionAdvisor, trackQuoteClick, type Advisor as ApiAdvisor } from '../utils/api';
 
 function emptyAdvisor(id?: string): Advisor {
   return {
@@ -187,6 +187,22 @@ export default function MicrositePage() {
     window.open(`mailto:${advisor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`Hola ${advisor.name}, necesito ayuda con:`)}`);
   }
 
+  function handleQuoteClick(product: Product) {
+    if (!advisor || !product.url) {
+      return;
+    }
+
+    void trackQuoteClick({
+      advisorId: advisor.id,
+      advisorCode: advisor.advisorCode,
+      advisorName: advisor.name,
+      advisorEmail: advisor.email,
+      micrositeUrl: window.location.href,
+      product: product.title,
+      cotizadorUrl: product.url,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-dana-cloud">
       {advisor && <Header advisor={advisor} />}
@@ -243,7 +259,7 @@ export default function MicrositePage() {
             )}
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {visibleProducts.map((product) => (
-                <ProductCard key={product.title} product={product} />
+                <ProductCard key={product.title} product={product} onQuoteClick={handleQuoteClick} />
               ))}
             </div>
           </div>

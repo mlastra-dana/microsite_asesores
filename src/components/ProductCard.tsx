@@ -2,9 +2,10 @@ import type { Product } from '../data/products';
 
 type ProductCardProps = {
   product: Product;
+  onQuoteClick?: (product: Product) => void;
 };
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, onQuoteClick }: ProductCardProps) {
   const hasUrl = Boolean(product.url);
 
   if (product.featured) {
@@ -27,6 +28,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             href={product.url}
             target="_blank"
             rel="noreferrer"
+            onClick={() => onQuoteClick?.(product)}
             className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-[#00478D] shadow-sm transition hover:bg-[#F4F7FB]"
           >
             {product.ctaLabel ?? 'Cotizar'}
@@ -52,6 +54,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           href={product.url}
           target="_blank"
           rel="noreferrer"
+          onClick={() => onQuoteClick?.(product)}
           className="mt-5 rounded-lg bg-[#00478D] px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
         >
           {product.ctaLabel ?? 'Cotizar'}

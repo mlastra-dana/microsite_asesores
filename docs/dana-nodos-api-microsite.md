@@ -320,7 +320,7 @@ Definir si el alta de productos sera una solicitud puntual de servicio o si el c
 
 ## Registro de clicks en cotizadores
 
-Este punto queda como alternativa tecnica para validar con KAM/DANA. El objetivo es que DANA conserve la medicion de clicks por asesor y producto.
+El objetivo es que DANA conserve la medicion de clicks por asesor y producto. El frontend no debe abrir un cotizador generico: abre la URL especifica que vino desde DANA para ese asesor y ese producto.
 
 ### Opcion A: links trackeables de DANA
 
@@ -341,29 +341,46 @@ Pendiente de validar:
 
 ### Opcion B: Lambda envia evento de click a DANA
 
-En esta opcion, el frontend llama primero a la Lambda. La Lambda registra el evento en DANA y luego devuelve la URL final para abrir el cotizador.
+Esta es la opcion que dejamos preparada en el proyecto.
+
+El frontend abre el cotizador en una pestana nueva y, en paralelo, avisa a la Lambda con `quote_click`. La Lambda actua como puente y llama a DANA con Start Conversation para que DANA cree el registro del click.
+
+Importante: el usuario no queda esperando por DANA para cotizar. Si DANA no confirma el registro del click, el cotizador igual abre y el error queda en logs para revision.
+
+Los clicks no se guardan en DynamoDB. DynamoDB queda reservado para el snapshot del microsite; DANA es el repositorio operativo para la medicion de clicks y el dashboard.
 
 ```text
 Usuario hace click
 Frontend -> Lambda: quote_click
 Lambda -> DANA Conversation API: start/data
 DANA crea registro/flujo de click
-Lambda -> Frontend: redirectUrl
-Frontend abre cotizador final
+Frontend abre cotizador final en una pestana nueva
 ```
 
 Endpoint candidato de DANA:
 
 ```text
-POST /api/2.0/rest/conversation/{conversationId}/start/data
+POST /api/2.0/rest/conversation/ProjectID/{projectId}/start/data
 ```
 
 Uso esperado:
 
 - Crear en DANA un flujo/lista para clicks, por ejemplo `Microsite_cotizador_clicks`.
-- Obtener el `conversationId` de ese flujo.
+- Obtener el `projectId` de ese flujo.
+- Configurar en la Lambda `DANA_CLICK_PROJECT_ID` con ese Project ID.
 - La Lambda llama `start/data` con los datos del click.
 - El flujo de DANA puede ser minimo: recibir datos, guardar el registro y cerrar con un nodo Update si se necesita marcar estado.
+
+Variables de entorno Lambda:
+
+```text
+DANA_CLICK_PROJECT_ID=<project id del flujo de clicks>
+DANA_CLICK_AUTH_METHOD=bearer
+```
+
+Se usa `ProjectID` porque no queremos depender de una conversacion ya activada ni de un `conversationId` particular. `DANA_CLICK_CONVERSATION_ID` queda solo como compatibilidad tecnica si algun ambiente viejo ya lo usa.
+
+`DANA_CLICK_AUTH_METHOD` puede quedar en `bearer` para usar OAuth. Si el flujo requiere usuario/password, cambiar a `basic`.
 
 Campos sugeridos para la lista/flujo de clicks:
 
@@ -371,14 +388,27 @@ Campos sugeridos para la lista/flujo de clicks:
 ADVISORID
 MICROSITEID
 MICROSITEURL
-PUBLICID
 NOMBREASESOR
+EMAILASESOR
 PRODUCTO
 COTIZADOR_URL
-CLICK_AT
-SOURCE
 USER_AGENT
 ```
+
+Tipos sugeridos en DANA:
+
+```text
+ADVISORID       VARCHAR(50)
+MICROSITEID     VARCHAR(100)
+MICROSITEURL    MEDIUMTEXT
+NOMBREASESOR    VARCHAR(300)
+EMAILASESOR     VARCHAR(254)
+PRODUCTO        VARCHAR(100)
+COTIZADOR_URL   MEDIUMTEXT
+USER_AGENT      MEDIUMTEXT
+```
+
+Importante: en el JSON se envia el `Code` del campo de DANA, no el `Name` visible en la pantalla. Por eso los campos van en mayusculas.
 
 JSON conceptual que la Lambda enviaria a DANA:
 
@@ -387,19 +417,45 @@ JSON conceptual que la Lambda enviaria a DANA:
   "ADVISORID": "91827463",
   "MICROSITEID": "ABC123",
   "MICROSITEURL": "https://main.d1w0srn8uz6n.amplifyapp.com/asesor/270C3E56BBA225E9",
-  "PUBLICID": "270C3E56BBA225E9",
   "NOMBREASESOR": "Daniela Rivero",
+  "EMAILASESOR": "daniela.rivero@example.com",
   "PRODUCTO": "Auto",
   "COTIZADOR_URL": "https://link.mercantilseguros.com/Auto_ADS_91827463",
-  "CLICK_AT": "2026-07-18T10:30:00Z",
-  "SOURCE": "microsite",
   "USER_AGENT": "browser"
 }
 ```
 
-Decision pendiente:
+La fecha del click queda cubierta por la fecha de insercion/update del flujo en DANA, por eso no se envia `CLICK_AT`. Tampoco se envia `PUBLICID`, `SOURCE`, `REFERER` ni IP.
 
-Validar si conviene operar una segunda lista/flujo en DANA para clicks o si DANA puede resolverlo con links trackeables.
+Response del endpoint `quote_click`:
+
+```json
+{
+  "ok": true,
+  "message": "Click enviado a DANA",
+  "type": "quote_click",
+  "redirectUrl": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+  "danaSent": true
+}
+```
+
+Significado:
+
+```text
+ok
+  Indica que la Lambda recibio el click y proceso el evento.
+
+redirectUrl
+  URL del cotizador que el frontend abre. Viene desde el campo COTIZADOR_*_URL del asesor.
+
+danaSent
+  true si la Lambda logro enviar el evento al flujo de clicks en DANA.
+  false si DANA no esta configurado o no acepto el evento.
+```
+
+Pendiente operativo:
+
+Validar con KAM/DANA si el flujo de clicks necesita un nodo Update final para marcar el registro como procesado o si basta con iniciar la conversacion/lista con `start/data`.
 
 ## Estructura del CSV de carga
 
@@ -414,11 +470,12 @@ docs/dana-microsite-asesores-demo.csv
 Cabecera esperada:
 
 ```csv
-UID,NombreAsesor,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,MicrositeID,MicrositeURL,CiudadAsesor,BioAsesor,WebsiteAsesor,ContactoAsesor,Cotizador_simplificado,Cotizador_simplificado_url,Cotizador_vitales,Cotizador_vitales_url,Cotizador_auto,cotizador_auto_url,Cotizador_salud,Cotizador_salud_url,Cotizador_emergencias_medicas,Cotizador_emergencias_medicas_url,Cotizador_platino,Cotizador_platino_url,Cotizador_travel,Cotizador_travel_url,Cotizador_CR,Cotizador_CR_url,Cotizador_Salud_Panama,Cotizador_salud_panama_url,response_microsite,response_actualizacion,response_baja,Micrositeactivado
+NombreAsesor,EmailAsesor,AdvisorId,Update,TelefonoAsesor,FotoAsesor,MicrositeID,MicrositeURL,CiudadAsesor,BioAsesor,WebsiteAsesor,ContactoAsesor,Cotizador_simplificado,Cotizador_simplificado_url,Cotizador_vitales,Cotizador_vitales_url,Cotizador_auto,cotizador_auto_url,Cotizador_salud,Cotizador_salud_url,Cotizador_emergencias_medicas,Cotizador_emergencias_medicas_url,Cotizador_platino,Cotizador_platino_url,Cotizador_travel,Cotizador_travel_url,Cotizador_CR,Cotizador_CR_url,Cotizador_Salud_Panama,Cotizador_salud_panama_url,response_microsite,response_actualizacion,response_baja,Micrositeactivado
 ```
 
 Notas importantes:
 
+- El CSV de carga no incluye `UID`; DANA genera ese campo automaticamente.
 - `NombreAsesor` debe ir sin espacios al inicio o al final para conservar el automapeo en DANA.
 - En registros nuevos para generar, deben venir vacios `Update`, `MicrositeID`, `MicrositeURL`, `response_microsite`, `response_actualizacion`, `response_baja` y `Micrositeactivado`.
 - El nodo API de generar devuelve `micrositeId` y `micrositeUrl`; el nodo Update de DANA los escribe en `MicrositeID` y `MicrositeURL`.

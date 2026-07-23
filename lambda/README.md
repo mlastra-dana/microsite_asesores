@@ -59,6 +59,8 @@ MICROSITE_BASE_URL=https://tudominio.com
 MICROSITE_ID_SECRET=valor-largo-privado
 DANA_REFRESH_ON_GET=false
 DANA_REFRESH_MIN_SECONDS=3600
+DANA_CLICK_PROJECT_ID=
+DANA_CLICK_AUTH_METHOD=bearer
 CORS_ORIGIN=*
 ```
 
@@ -71,6 +73,18 @@ DANA_REFRESH_ON_GET=false
 ```
 
 Con eso, cada visita al microsite carga desde DynamoDB. Las actualizaciones llegan desde DANA por POST a `advisor_sync`.
+
+Para registrar clicks de cotizadores en DANA, configura `DANA_CLICK_PROJECT_ID` con el Project ID del flujo/lista de clicks. La Lambda recibira `quote_click` desde el frontend y actuara solo como puente hacia DANA:
+
+```text
+POST /api/2.0/rest/conversation/ProjectID/{DANA_CLICK_PROJECT_ID}/start/data
+```
+
+`DANA_CLICK_CONVERSATION_ID` queda soportado solo como compatibilidad hacia atras, pero el camino recomendado es `DANA_CLICK_PROJECT_ID` para no depender de una activacion previa de conversacion.
+
+`DANA_CLICK_AUTH_METHOD` usa `bearer` por defecto con las credenciales OAuth ya configuradas. Si el flujo de DANA requiere Basic Auth, puede cambiarse a `basic` y usara `DANA_USERNAME`/`DANA_PASSWORD`.
+
+Los clicks no se guardan en DynamoDB. DynamoDB queda reservado para el snapshot operativo de los microsites; DANA conserva la data de clicks para reportes y dashboard.
 
 El CSV de prueba para cargar en DANA esta en:
 

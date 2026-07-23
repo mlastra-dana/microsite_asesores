@@ -13,9 +13,11 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
     ? `https://wa.me/${cleanWhatsapp}?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20seguros`
     : '';
   const isCompanyProfile = Boolean(advisor.website);
-  const websiteHref = advisor.website?.startsWith('http')
-    ? advisor.website
-    : `https://${advisor.website}`;
+  const websiteHref = advisor.website
+    ? advisor.website.startsWith('http')
+      ? advisor.website
+      : `https://${advisor.website}`
+    : '';
   const contactItems = [
     advisor.phone ? { icon: Phone, label: 'Telefono', value: advisor.phone } : null,
     advisor.website ? { icon: Globe2, label: 'Sitio web', value: advisor.website, href: websiteHref } : null,

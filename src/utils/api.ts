@@ -33,6 +33,51 @@ export type ProvisionResponse = {
   };
 };
 
+export type QuoteClickPayload = {
+  advisorId: string;
+  advisorCode?: string;
+  advisorName?: string;
+  advisorEmail?: string;
+  micrositeId?: string;
+  micrositeUrl?: string;
+  product: string;
+  cotizadorUrl: string;
+};
+
+export async function trackQuoteClick(payload: QuoteClickPayload) {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!apiUrl || !payload.advisorId || !payload.product || !payload.cotizadorUrl) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      keepalive: true,
+      body: JSON.stringify({
+        type: 'quote_click',
+        ...payload,
+        userAgent: window.navigator.userAgent,
+        referrer: window.location.href,
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  } catch (error) {
+    console.warn('No se pudo registrar el click del cotizador.', error);
+    return null;
+  }
+}
+
 export async function fetchAdvisorById(advisorId: string, options: { refresh?: boolean } = {}): Promise<ProvisionResponse | null> {
   const apiUrl = import.meta.env.VITE_API_URL;
 

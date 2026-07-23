@@ -248,15 +248,14 @@ Alternativas a validar:
 
 2. Lambda registra el click y luego abre el cotizador.
 
-   En este modelo, el frontend llama a la Lambda antes de abrir el cotizador. La Lambda registra el evento y devuelve la URL final.
+   Esta opcion ya queda preparada tecnicamente en el proyecto. El frontend avisa a la Lambda cuando el asesor/cliente hace click en un cotizador y abre la URL final en una pestana nueva. La Lambda actua como puente y, si DANA tiene configurado el flujo de clicks, inicia una conversacion para que el click quede registrado en DANA.
 
    Flujo esperado:
 
    ```text
    Usuario hace click en el microsite
    Frontend llama la Lambda con advisorId + producto + URL
-   Lambda registra el click
-   Lambda responde con redirectUrl
+   Lambda envia evento a DANA con Start Conversation
    Frontend abre el cotizador final
    ```
 
@@ -279,25 +278,24 @@ Alternativas a validar:
    ADVISORID
    MICROSITEID
    MICROSITEURL
-   PUBLICID
    NOMBREASESOR
+   EMAILASESOR
    PRODUCTO
    COTIZADOR_URL
-   CLICK_AT
-   SOURCE
    USER_AGENT
    ```
 
    Implicacion:
 
    - Da mas control y trazabilidad desde nuestro proyecto.
-   - Permite guardar datos mas ricos por click.
+   - Permite enviar datos mas ricos por click hacia DANA.
+   - Mantiene DANA como repositorio operativo de analitica de clicks.
    - Requiere validar si operativamente tiene sentido mantener una segunda lista o un segundo flujo para eventos del microsite.
    - Requiere definir que ocurre si DANA no confirma el registro del click. Recomendacion inicial: no bloquear al usuario; abrir el cotizador y registrar el error para revision.
 
 Criterio para conversar con KAM:
 
-No dar por cerrada la opcion todavia. La alternativa Lambda + lista/flujo de clicks parece la mas controlada, pero debe validarse junto con la operacion de DANA y sin mezclarla con el flujo de actualizacion del perfil del asesor.
+La alternativa Lambda + lista/flujo de clicks es la opcion preparada en el proyecto porque da mas control y no depende de links trackeables especiales. Falta validar con KAM/DANA la factibilidad operativa de tener una lista/flujo adicional para clicks y obtener el `conversationId` que se configurara en la Lambda.
 
 ### Registro de solicitudes de actualizacion del perfil
 

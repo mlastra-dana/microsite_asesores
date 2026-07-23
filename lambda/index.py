@@ -42,6 +42,9 @@ DANA_OAUTH_AUTH_METHOD = os.environ.get("DANA_OAUTH_AUTH_METHOD", "basic")
 
 DANA_BASE_URL = os.environ.get("DANA_BASE_URL", "https://appserv.danaconnect.com")
 DANA_TRIGGER_URL = os.environ.get("DANA_TRIGGER_URL", "https://appserv.danaconnect.com/event/Trigger")
+DANA_CLICK_PROJECT_ID = os.environ.get("DANA_CLICK_PROJECT_ID", "")
+DANA_CLICK_CONVERSATION_ID = os.environ.get("DANA_CLICK_CONVERSATION_ID", "")
+DANA_CLICK_AUTH_METHOD = os.environ.get("DANA_CLICK_AUTH_METHOD", "bearer")
 DANA_MICROSITE_PARAM_FIELD = os.environ.get("DANA_MICROSITE_PARAM_FIELD", "danaParam")
 DANA_DATA_FIELDS = os.environ.get(
     "DANA_DATA_FIELDS",
@@ -132,6 +135,17 @@ def get_method(event):
 
 def get_query_params(event):
     return event.get("queryStringParameters") or {}
+
+
+def get_header(event, header_name):
+    headers = event.get("headers") or {}
+    header_name_lower = header_name.lower()
+
+    for key, value in headers.items():
+        if str(key).lower() == header_name_lower:
+            return value
+
+    return ""
 
 
 def validate_required(payload, fields):
@@ -347,6 +361,92 @@ def trigger_dana_update(danaparam, values):
 
     except urllib.error.URLError as error:
         print("Error conexion Trigger DANAconnect:", error.reason)
+        return {
+            "sent": False,
+            "reason": str(error.reason),
+        }
+
+
+def dana_start_conversation_url(conversation_id):
+    encoded_conversation_id = urllib.parse.quote(str(conversation_id), safe="")
+    return f"{DANA_BASE_URL.rstrip('/')}/api/2.0/rest/conversation/{encoded_conversation_id}/start/data"
+
+
+def dana_start_project_conversation_url(project_id):
+    encoded_project_id = urllib.parse.quote(str(project_id), safe="")
+    return f"{DANA_BASE_URL.rstrip('/')}/api/2.0/rest/conversation/ProjectID/{encoded_project_id}/start/data"
+
+
+def dana_click_authorization_header():
+    if DANA_CLICK_AUTH_METHOD.strip().lower() == "basic":
+        return dana_basic_authorization_header()
+
+    return f"Bearer {get_oauth_token()}"
+
+
+def start_dana_click_conversation(click_payload):
+    if not DANA_CLICK_PROJECT_ID and not DANA_CLICK_CONVERSATION_ID:
+        return {
+            "sent": False,
+            "reason": "DANA_CLICK_PROJECT_ID no configurado",
+        }
+
+    try:
+        authorization_header = dana_click_authorization_header()
+    except Exception as error:
+        print("Error preparando autenticacion click DANAconnect:", str(error))
+        return {
+            "sent": False,
+            "reason": "Autenticacion DANA no disponible para clicks",
+        }
+
+    if not authorization_header:
+        return {
+            "sent": False,
+            "reason": "Autenticacion DANA no configurada para clicks",
+        }
+
+    if DANA_CLICK_PROJECT_ID:
+        url = dana_start_project_conversation_url(DANA_CLICK_PROJECT_ID)
+    else:
+        url = dana_start_conversation_url(DANA_CLICK_CONVERSATION_ID)
+
+    data = json.dumps(click_payload, ensure_ascii=False).encode("utf-8")
+
+    print("Enviando click a DANAconnect URL:", url)
+    print("Payload click DANAconnect:", json.dumps(click_payload, ensure_ascii=False))
+
+    request = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Authorization": authorization_header,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=12) as result:
+            raw_body = result.read().decode("utf-8")
+            print("Respuesta click DANAconnect:", raw_body)
+            return {
+                "sent": True,
+                "statusCode": result.status,
+            }
+
+    except urllib.error.HTTPError as error:
+        error_body = error.read().decode("utf-8", errors="replace")
+        print("Error HTTP click DANAconnect:", error.code, error_body)
+        return {
+            "sent": False,
+            "statusCode": error.code,
+            "reason": "DANAconnect no acepto el evento de click",
+        }
+
+    except urllib.error.URLError as error:
+        print("Error conexion click DANAconnect:", error.reason)
         return {
             "sent": False,
             "reason": str(error.reason),
@@ -1070,6 +1170,77 @@ def save_event(payload):
     }
 
 
+def utc_timestamp():
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def handle_quote_click(payload, event):
+    advisor_id = trimmed(payload.get("advisorId") or payload.get("publicId") or payload.get("PUBLICID"))
+    product = trimmed(payload.get("product") or payload.get("PRODUCTO"))
+    cotizador_url = trimmed(payload.get("cotizadorUrl") or payload.get("COTIZADOR_URL") or payload.get("url"))
+
+    missing = []
+    if not advisor_id:
+        missing.append("advisorId")
+    if not product:
+        missing.append("product")
+    if not cotizador_url:
+        missing.append("cotizadorUrl")
+
+    if missing:
+        return response(400, {
+            "ok": False,
+            "message": "Campos requeridos faltantes",
+            "type": "quote_click",
+            "missing": missing,
+        })
+
+    if is_dangerous_url(cotizador_url) or not is_https_url(cotizador_url):
+        return response(400, {
+            "ok": False,
+            "message": "COTIZADOR_URL debe iniciar con https://",
+            "type": "quote_click",
+        })
+
+    user_agent = trimmed(payload.get("userAgent") or get_header(event, "user-agent"))
+    microsite_url = trimmed(
+        payload.get("micrositeUrl")
+        or payload.get("MICROSITEURL")
+        or f"{MICROSITE_BASE_URL.rstrip('/')}/asesor/{advisor_id}"
+    )
+    saved_record = None
+
+    try:
+        saved_record = get_saved_record(advisor_id)
+    except Exception as error:
+        print("quote_click_record_lookup_error:", str(error))
+
+    saved_advisor = saved_record.get("advisor") if isinstance(saved_record, dict) else {}
+    if not isinstance(saved_advisor, dict):
+        saved_advisor = {}
+
+    dana_click_payload = {
+        "ADVISORID": trimmed(saved_advisor.get("internalAdvisorId") or payload.get("internalAdvisorId") or payload.get("advisorCode") or payload.get("ADVISORID")),
+        "MICROSITEID": trimmed((saved_record or {}).get("micrositeId") or payload.get("micrositeId") or payload.get("MICROSITEID")),
+        "MICROSITEURL": trimmed((saved_record or {}).get("micrositeUrl") or microsite_url),
+        "NOMBREASESOR": trimmed(saved_advisor.get("name") or payload.get("advisorName") or payload.get("NOMBREASESOR")),
+        "EMAILASESOR": trimmed(saved_advisor.get("email") or payload.get("advisorEmail") or payload.get("EMAILASESOR")),
+        "PRODUCTO": product,
+        "COTIZADOR_URL": cotizador_url,
+        "USER_AGENT": user_agent[:500],
+    }
+
+    dana_result = start_dana_click_conversation(dana_click_payload)
+
+    return response(200, {
+        "ok": True,
+        "message": "Click enviado a DANA",
+        "type": "quote_click",
+        "redirectUrl": cotizador_url,
+        "danaSent": bool(dana_result.get("sent")),
+    })
+
+
 def handle_landing_provision(payload):
     danaparam = payload.get("danaparam") or payload.get("danaParam") or payload.get("dana") or payload.get("advisorId")
 
@@ -1464,6 +1635,9 @@ def lambda_handler(event, context):
 
         if event_type == "advisor_sync":
             return handle_advisor_sync(payload)
+
+        if event_type == "quote_click":
+            return handle_quote_click(payload, event)
 
         return handle_simple_event(payload)
 
