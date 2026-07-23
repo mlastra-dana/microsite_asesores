@@ -152,8 +152,8 @@ def validate_required(payload, fields):
     return [field for field in fields if not payload.get(field)]
 
 
-def get_oauth_token():
-    if DANA_ACCESS_TOKEN:
+def get_oauth_token(allow_static_token=True):
+    if allow_static_token and DANA_ACCESS_TOKEN:
         return DANA_ACCESS_TOKEN
 
     now = int(time.time())
@@ -259,6 +259,9 @@ def fetch_dana_contact(identifier):
 
     if not authorization_header:
         authorization_header = f"Bearer {get_oauth_token()}"
+
+    if not authorization_header:
+        raise ValueError("Autenticacion DANAconnect no configurada para Data Retrieval")
 
     request = urllib.request.Request(
         url,
@@ -381,7 +384,7 @@ def dana_click_authorization_header():
     if DANA_CLICK_AUTH_METHOD.strip().lower() == "basic":
         return dana_basic_authorization_header()
 
-    return f"Bearer {get_oauth_token()}"
+    return f"Bearer {get_oauth_token(allow_static_token=False)}"
 
 
 def start_dana_click_conversation(click_payload):

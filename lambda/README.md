@@ -84,6 +84,8 @@ POST /api/2.0/rest/conversation/ProjectID/{DANA_CLICK_PROJECT_ID}/start/data
 
 `DANA_CLICK_AUTH_METHOD` usa `bearer` por defecto con las credenciales OAuth ya configuradas. Si el flujo de DANA requiere Basic Auth, puede cambiarse a `basic` y usara `DANA_USERNAME`/`DANA_PASSWORD`.
 
+Para clicks no se debe depender de `DANA_ACCESS_TOKEN`, porque ese token vence. Cuando `DANA_CLICK_AUTH_METHOD=bearer`, la Lambda ignora el token fijo y solicita un token renovable con `DANA_CLIENT_ID`, `DANA_CLIENT_SECRET` y `DANA_OAUTH_SCOPE`.
+
 Los clicks no se guardan en DynamoDB. DynamoDB queda reservado para el snapshot operativo de los microsites; DANA conserva la data de clicks para reportes y dashboard.
 
 El CSV de prueba para cargar en DANA esta en:
