@@ -75,7 +75,12 @@ export default function AdvisorEditPage() {
       } catch (loadError) {
         console.warn('No se pudo cargar el asesor para actualizar datos.', loadError);
         if (isMounted) {
-          setError('No pudimos actualizar los datos desde el servicio. Puedes revisar la información cargada y enviar la solicitud.');
+          setAdvisor(fallbackAdvisor);
+          setError(
+            hasAdvisorById(advisorId)
+              ? ''
+              : 'No pudimos actualizar los datos desde el servicio. Puedes revisar la información cargada y enviar la solicitud.',
+          );
         }
       } finally {
         if (isMounted) {

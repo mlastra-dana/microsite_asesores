@@ -124,9 +124,14 @@ export default function MicrositePage() {
       } catch (error) {
         console.warn('No se pudo cargar el asesor desde DANA.', error);
         if (isMounted) {
-          clearCachedProvision(advisorId);
-          setAdvisor(null);
-          setAdvisorError(error instanceof Error ? error.message : 'No se pudo cargar el asesor desde DANA.');
+          if (advisorId && hasLocalAdvisor) {
+            setAdvisor(fallbackAdvisor);
+            setAdvisorError('');
+          } else {
+            clearCachedProvision(advisorId);
+            setAdvisor(null);
+            setAdvisorError(error instanceof Error ? error.message : 'No se pudo cargar el asesor desde DANA.');
+          }
         }
       } finally {
         if (isMounted) {
