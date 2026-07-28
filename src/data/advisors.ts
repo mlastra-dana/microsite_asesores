@@ -33,7 +33,7 @@ export const advisors: Advisor[] = [
     advisorCode: 'SUDEASEG S-69',
     photoUrl: tuSeguroLogo,
     bio: 'Compara opciones para proteger tu salud, automóvil, mascotas y viajes con el respaldo de especialistas de amplia trayectoria en Latinoamérica.',
-    products: ['Vitales', 'Auto', 'Salud', 'C.R.'],
+    products: ['Vida', 'Auto', 'Salud', 'Hogar'],
   },
   {
     id: 'FDF34DAC98DA4246',
@@ -47,7 +47,7 @@ export const advisors: Advisor[] = [
     advisorCode: 'PAS-2088',
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=640&q=80',
     bio: 'Acompaño a familias y empresas venezolanas en decisiones de proteccion financiera.',
-    products: ['Vitales', 'Auto', 'Platino', 'C.R.'],
+    products: ['Vida', 'Auto', 'Platino', 'Hogar'],
   },
   {
     id: 'E3064E9B655B4359',
@@ -75,7 +75,7 @@ export const advisors: Advisor[] = [
     advisorCode: 'ADS-4582',
     photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=640&q=80',
     bio: 'Oriento a profesionales independientes en soluciones de salud, vida y auto.',
-    products: ['Vitales', 'Auto', 'Salud', 'Travel'],
+    products: ['Vida', 'Auto', 'Salud', 'Travel'],
   },
   {
     id: 'C6B71A95B42475C4',
@@ -89,7 +89,7 @@ export const advisors: Advisor[] = [
     advisorCode: 'ADS-7741',
     photoUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=640&q=80',
     bio: 'Ayudo a pequenos negocios a elegir coberturas para continuidad operativa y proteccion patrimonial.',
-    products: ['Auto', 'Emergencias Médicas', 'Platino', 'C.R.'],
+    products: ['Auto', 'Emergencias Médicas', 'Platino', 'Hogar'],
   },
 ];
 

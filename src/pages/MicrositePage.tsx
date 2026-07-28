@@ -152,11 +152,13 @@ export default function MicrositePage() {
       return products;
     }
 
+    const advisorProductSet = new Set(advisor.products);
     const requireAdvisorProductUrls = !hasLocalAdvisor;
     const selectedProducts = products
-      .filter((product) => advisor.products.includes(product.title))
+      .filter((product) => advisorProductSet.has(product.title) || product.aliases?.some((alias) => advisorProductSet.has(alias)))
       .map((product) => {
-        const advisorProductUrl = advisor.productLinks?.[product.title];
+        const advisorProductUrl = advisor.productLinks?.[product.title]
+          || product.aliases?.map((alias) => advisor.productLinks?.[alias]).find(Boolean);
 
         if (requireAdvisorProductUrls) {
           return {

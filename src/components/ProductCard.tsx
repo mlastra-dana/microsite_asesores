@@ -12,11 +12,11 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
     return (
       <article className="flex h-full flex-col rounded-2xl bg-demo-blue p-6 text-white shadow-soft ring-1 ring-demo-blueDark transition hover:-translate-y-0.5 hover:shadow-lg sm:col-span-2 lg:col-span-2">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-white/70">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-demo-bluePale ring-1 ring-white/70">
             <img src={product.logoUrl} alt="" className="h-11 w-11 object-contain" />
           </div>
           {product.badge && (
-            <span className="rounded-full bg-[#F78E1E] px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
+            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white ring-1 ring-white/25">
               {product.badge}
             </span>
           )}
@@ -29,7 +29,7 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
             target="_blank"
             rel="noreferrer"
             onClick={() => onQuoteClick?.(product)}
-            className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-demo-blue shadow-sm transition hover:bg-[#F4F7FB]"
+            className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-demo-blue shadow-sm transition hover:bg-demo-bluePale"
           >
             {product.ctaLabel ?? 'Cotizar'}
           </a>
@@ -44,7 +44,7 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
 
   return (
     <article className="flex h-full flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-[#F4F7FB] ring-1 ring-[#E6EDF5]">
+      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-demo-bluePale ring-1 ring-demo-blue/10">
         <img src={product.logoUrl} alt="" className="h-10 w-10 object-contain" />
       </div>
       <h3 className="text-xl font-extrabold text-dana-ink">{product.title}</h3>

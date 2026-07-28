@@ -1,11 +1,12 @@
-import autoLogo from '../assets/products/auto.png';
-import combinadoLogo from '../assets/products/combinado.png';
-import cyberLogo from '../assets/products/cyber.png';
-import emergenciaLogo from '../assets/products/emergencia.png';
-import pymeLogo from '../assets/products/pyme.png';
-import rcpLogo from '../assets/products/rcp.png';
-import saludLogo from '../assets/products/salud.png';
-import vitalesLogo from '../assets/products/vitales.png';
+import autoLogo from '../assets/products/example-auto.svg';
+import emergenciaLogo from '../assets/products/example-emergencias.svg';
+import hogarLogo from '../assets/products/example-hogar.svg';
+import platinoLogo from '../assets/products/example-platino.svg';
+import saludLogo from '../assets/products/example-salud.svg';
+import saludPanamaLogo from '../assets/products/example-salud-panama.svg';
+import simplificadoLogo from '../assets/products/example-simplificado.svg';
+import travelLogo from '../assets/products/example-travel.svg';
+import vidaLogo from '../assets/products/example-vida.svg';
 
 export type Product = {
   title: string;
@@ -15,23 +16,25 @@ export type Product = {
   badge?: string;
   ctaLabel?: string;
   featured?: boolean;
+  aliases?: string[];
 };
 
 export const products: Product[] = [
   {
     title: 'Cotizador Simplificado',
     description: 'Experiencia demo para generar una cotización rápida de los planes disponibles.',
-    logoUrl: saludLogo,
+    logoUrl: simplificadoLogo,
     url: 'https://example.com/example-insurance/cotizador-simplificado',
     badge: 'Nueva experiencia',
     ctaLabel: 'Probar ahora',
     featured: true,
   },
   {
-    title: 'Vitales',
+    title: 'Vida',
     description: 'Protección para cuidar tu bienestar y el de quienes más importan.',
-    logoUrl: vitalesLogo,
+    logoUrl: vidaLogo,
     url: 'https://example.com/example-insurance/vitales',
+    aliases: ['Vitales', 'Seguro de Vida'],
   },
   {
     title: 'Auto',
@@ -54,25 +57,26 @@ export const products: Product[] = [
   {
     title: 'Platino',
     description: 'Una opción de protección amplia para necesidades especiales.',
-    logoUrl: rcpLogo,
+    logoUrl: platinoLogo,
     url: 'https://example.com/example-insurance/platino',
   },
   {
     title: 'Travel',
     description: 'Asistencia y protección para disfrutar tus viajes con tranquilidad.',
-    logoUrl: pymeLogo,
+    logoUrl: travelLogo,
     url: 'https://example.com/example-insurance/travel',
   },
   {
-    title: 'C.R.',
+    title: 'Hogar',
     description: 'Protección residencial para tu hogar y sus bienes.',
-    logoUrl: combinadoLogo,
+    logoUrl: hogarLogo,
     url: 'https://example.com/example-insurance/residencial',
+    aliases: ['C.R.', 'Seguro de Hogar'],
   },
   {
     title: 'Salud Panamá',
     description: 'Beneficios de salud para grupos y clientes en Panamá.',
-    logoUrl: cyberLogo,
+    logoUrl: saludPanamaLogo,
     url: 'https://example.com/example-insurance/salud-panama',
   },
 ];
