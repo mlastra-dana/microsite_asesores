@@ -16,10 +16,10 @@ export default function App() {
       <Route path="/provisionar" element={<ProvisionPage />} />
       <Route path="/asesor/2377" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
       <Route path="/asesor/laura-lepage" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
-      <Route path="/asesor/tuseguro" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
+      <Route path="/asesor/demo" element={<Navigate to={`/asesor/${defaultMicrositeId}`} replace />} />
       <Route path="/asesor/2377/actualizar" element={<Navigate to={`/asesor/${defaultMicrositeId}/actualizar`} replace />} />
       <Route path="/asesor/laura-lepage/actualizar" element={<Navigate to={`/asesor/${defaultMicrositeId}/actualizar`} replace />} />
-      <Route path="/asesor/tuseguro/actualizar" element={<Navigate to={`/asesor/${defaultMicrositeId}/actualizar`} replace />} />
+      <Route path="/asesor/demo/actualizar" element={<Navigate to={`/asesor/${defaultMicrositeId}/actualizar`} replace />} />
       <Route path="/asesor/:advisorId" element={<MicrositePage />} />
       <Route path="/asesor/:advisorId/actualizar" element={<AdvisorEditPage />} />
       <Route path="*" element={<NotFoundPage />} />

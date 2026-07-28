@@ -1,4 +1,4 @@
-import tuSeguroLogo from '../assets/advisors/tuseguro-logo.svg';
+import exampleInsuranceLogo from '../assets/brand/Marca_example/logos/png/example_insurance_color.png';
 
 export type Advisor = {
   id: string;
@@ -21,19 +21,19 @@ export type Advisor = {
 export const advisors: Advisor[] = [
   {
     id: '9F3806A23CEA5138',
-    company: 'Arroba Seguros Sociedad de Corretaje de Seguros, C.A.',
-    name: 'TuSeguro.com',
-    role: 'Asesores digitales expertos en seguros',
+    company: 'Example Insurance',
+    name: 'Example Insurance',
+    role: 'Red de asesores digitales',
     email: '',
-    website: 'tuseguro.com',
-    contactUrl: 'https://tuseguro.com/contactanos/',
-    phone: '+58 (212) 628.14.55',
-    whatsapp: '573209926066',
-    city: 'Caracas, Venezuela',
-    advisorCode: 'SUDEASEG S-69',
-    photoUrl: tuSeguroLogo,
-    bio: 'Compara opciones para proteger tu salud, automóvil, mascotas y viajes con el respaldo de especialistas de amplia trayectoria en Latinoamérica.',
-    products: ['Seguro de Salud', 'Seguro de Auto', 'Seguro de Vida', 'Seguro de Hogar'],
+    website: 'example-insurance.com',
+    contactUrl: 'https://example.com/example-insurance/contacto',
+    phone: '+58 (212) 555.10.10',
+    whatsapp: '584125551010',
+    city: 'Caracas',
+    advisorCode: '91827463',
+    photoUrl: exampleInsuranceLogo,
+    bio: 'Experiencia demo para centralizar contacto, productos, cotizaciones y perfil profesional del asesor.',
+    products: ['Vitales', 'Auto', 'Salud', 'C.R.'],
   },
   {
     id: 'FDF34DAC98DA4246',
