@@ -9,7 +9,7 @@ import { fetchAdvisorById, type Advisor as ApiAdvisor } from '../utils/api';
 function emptyAdvisor(id?: string): Advisor {
   return {
     id: id || '',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: '',
     role: 'Asesor de Seguros',
     email: '',
@@ -98,7 +98,7 @@ export default function AdvisorEditPage() {
         <div className="mx-auto max-w-6xl">
           <section className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-extrabold uppercase tracking-wide text-mercantil-blue">
+              <p className="text-sm font-extrabold uppercase tracking-wide text-demo-blue">
                 Revisión de perfil
               </p>
               <h1 className="mt-2 text-3xl font-extrabold text-dana-ink sm:text-4xl">
@@ -110,7 +110,7 @@ export default function AdvisorEditPage() {
             </div>
             <Link
               to={`/asesor/${advisor.id}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-mercantil-blue shadow-sm transition hover:border-mercantil-blue/30 hover:bg-mercantil-bluePale"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-demo-blue shadow-sm transition hover:border-demo-blue/30 hover:bg-demo-bluePale"
             >
               <ArrowLeft size={18} />
               Volver al microsite

@@ -55,7 +55,7 @@ DANA_FIELDS_QUERY_PARAM = os.environ.get("DANA_FIELDS_QUERY_PARAM", "fieldList")
 
 MICROSITE_BASE_URL = os.environ.get(
     "MICROSITE_BASE_URL",
-    "https://main.d1w0srn8uz6n.amplifyapp.com",
+    "https://serene-marsh-tk2a.here.now",
 )
 MICROSITE_ID_SECRET = os.environ.get("MICROSITE_ID_SECRET", "")
 

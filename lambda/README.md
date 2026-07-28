@@ -92,7 +92,7 @@ El CSV de prueba para cargar en DANA esta en:
 
 `docs/dana-microsite-asesores-demo.csv`
 
-`ADVISORID` es el identificador unico del asesor generado por Mercantil Seguros. Se muestra dentro del microsite como codigo del asesor, pero no se expone como identificador de la URL publica.
+`ADVISORID` es el identificador unico del asesor generado por Example Insurance. Se muestra dentro del microsite como codigo del asesor, pero no se expone como identificador de la URL publica.
 
 `MICROSITEID` es el identificador interno del microsite guardado en DANA. Tampoco se expone directamente en la URL publica.
 
@@ -102,7 +102,7 @@ Si DANA envia `MICROSITEID` vacio, la Lambda lo genera automaticamente con un ha
 
 Los campos `COTIZADOR_*` deben cargarse con `SI` o `NO` para habilitar los cotizadores que vera cada asesor. Cada cotizador habilitado tambien debe tener su campo `COTIZADOR_*_URL` en el registro de ese asesor; si viene en `SI` sin URL, el frontend no lo muestra.
 
-Este modelo de cotizadores con campos fijos es el alcance actual para el segmento definido de asesores. Si Mercantil agrega un producto nuevo, puede manejarse como una solicitud de servicio/evolutivo: crear campos en DANA, ajustar nodos API, actualizar Lambda/frontend y validar el flujo.
+Este modelo de cotizadores con campos fijos es el alcance actual para el segmento definido de asesores. Si el cliente agrega un producto nuevo, puede manejarse como una solicitud de servicio/evolutivo: crear campos en DANA, ajustar nodos API, actualizar Lambda/frontend y validar el flujo.
 
 Modelo dinamico de referencia para una etapa posterior:
 
@@ -231,10 +231,10 @@ La Lambda resuelve ese identificador contra DynamoDB y devuelve:
     "advisorCode": "24657722",
     "products": ["Cotizador Simplificado", "Vitales", "Auto", "Salud"],
     "productLinks": {
-      "Cotizador Simplificado": "https://link.mercantilseguros.com/CotizadorMS_ADS_2377",
-      "Vitales": "https://link.mercantilseguros.com/Vitales_ADS_2377",
-      "Auto": "https://link.mercantilseguros.com/Auto_ADS_2377",
-      "Salud": "https://link.mercantilseguros.com/Salud_ADS_2377"
+      "Cotizador Simplificado": "https://example.com/example-insurance/cotizador-simplificado",
+      "Vitales": "https://example.com/example-insurance/vitales",
+      "Auto": "https://example.com/example-insurance/auto",
+      "Salud": "https://example.com/example-insurance/salud"
     }
   }
 }
@@ -267,13 +267,13 @@ curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
     "WEBSITEASESOR":"https://...",
     "CONTACTOASESOR":"https://...",
     "COTIZADOR_SIMPLIFICADO":"SI",
-    "COTIZADOR_SIMPLIFICADO_URL":"https://link.mercantilseguros.com/CotizadorMS_ADS_2377",
+    "COTIZADOR_SIMPLIFICADO_URL":"https://example.com/example-insurance/cotizador-simplificado",
     "COTIZADOR_VITALES":"NO",
     "COTIZADOR_VITALES_URL":"",
     "COTIZADOR_AUTO":"SI",
-    "COTIZADOR_AUTO_URL":"https://link.mercantilseguros.com/Auto_ADS_2377",
+    "COTIZADOR_AUTO_URL":"https://example.com/example-insurance/auto",
     "COTIZADOR_SALUD":"SI",
-    "COTIZADOR_SALUD_URL":"https://link.mercantilseguros.com/Salud_ADS_2377",
+    "COTIZADOR_SALUD_URL":"https://example.com/example-insurance/salud",
     "COTIZADOR_EMERGENCIAS_MEDICAS":"NO",
     "COTIZADOR_EMERGENCIAS_MEDICAS_URL":"",
     "COTIZADOR_PLATINO":"NO",
@@ -281,7 +281,7 @@ curl -i -X POST "https://xxxxx.lambda-url.region.on.aws/" \
     "COTIZADOR_TRAVEL":"NO",
     "COTIZADOR_TRAVEL_URL":"",
     "COTIZADOR_CR":"SI",
-    "COTIZADOR_CR_URL":"https://link.mercantilseguros.com/Residencial_ADS_2377",
+    "COTIZADOR_CR_URL":"https://example.com/example-insurance/residencial",
     "COTIZADOR_SALUD_PANAMA":"NO",
     "COTIZADOR_SALUD_PANAMA_URL":""
   }'

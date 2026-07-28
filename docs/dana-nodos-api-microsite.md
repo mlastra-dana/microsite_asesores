@@ -170,7 +170,7 @@ Generar o actualizar:
   "ok": true,
   "advisorId": "PUBLICID_ENMASCARADO",
   "micrositeId": "MICROSITEID_INTERNO",
-  "micrositeUrl": "https://main.d1w0srn8uz6n.amplifyapp.com/asesor/PUBLICID_ENMASCARADO",
+  "micrositeUrl": "https://serene-marsh-tk2a.here.now/asesor/PUBLICID_ENMASCARADO",
   "micrositeActivado": "SI"
 }
 ```
@@ -182,7 +182,7 @@ Inactivar:
   "ok": true,
   "advisorId": "PUBLICID_ENMASCARADO",
   "micrositeId": "MICROSITEID_INTERNO",
-  "micrositeUrl": "https://main.d1w0srn8uz6n.amplifyapp.com/asesor/PUBLICID_ENMASCARADO",
+  "micrositeUrl": "https://serene-marsh-tk2a.here.now/asesor/PUBLICID_ENMASCARADO",
   "micrositeActivado": "NO"
 }
 ```
@@ -210,7 +210,7 @@ action
 
 advisorId
   PUBLICID enmascarado. Es el identificador publico usado en la URL.
-  No es el ADVISORID de Mercantil ni el MICROSITEID interno.
+  No es el ADVISORID del cliente ni el MICROSITEID interno.
 
 micrositeId
   Identificador interno del microsite. Se guarda en DANA como MICROSITEID.
@@ -293,14 +293,14 @@ La idea es que DANA envie una lista de productos habilitados por asesor, por eje
       "codigo": "AUTO",
       "nombre": "Auto",
       "habilitado": "SI",
-      "url": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+      "url": "https://example.com/example-insurance/Auto_ADS_91827463",
       "orden": 1
     },
     {
       "codigo": "SALUD",
       "nombre": "Salud",
       "habilitado": "SI",
-      "url": "https://link.mercantilseguros.com/Salud_ADS_91827463",
+      "url": "https://example.com/example-insurance/Salud_ADS_91827463",
       "orden": 2
     }
   ]
@@ -316,7 +316,7 @@ Con ese modelo:
 
 Decision pendiente:
 
-Definir si el alta de productos sera una solicitud puntual de servicio o si el catalogo dinamico vivira como `COTIZADORES_JSON` dentro del registro del asesor, como una lista adicional en DANA o como un servicio oficial de Mercantil.
+Definir si el alta de productos sera una solicitud puntual de servicio o si el catalogo dinamico vivira como `COTIZADORES_JSON` dentro del registro del asesor, como una lista adicional en DANA o como un servicio oficial de banco o cliente.
 
 ## Registro de clicks en cotizadores
 
@@ -416,11 +416,11 @@ JSON conceptual que la Lambda enviaria a DANA:
 {
   "ADVISORID": "91827463",
   "MICROSITEID": "ABC123",
-  "MICROSITEURL": "https://main.d1w0srn8uz6n.amplifyapp.com/asesor/270C3E56BBA225E9",
+  "MICROSITEURL": "https://serene-marsh-tk2a.here.now/asesor/270C3E56BBA225E9",
   "NOMBREASESOR": "Daniela Rivero",
   "EMAILASESOR": "daniela.rivero@example.com",
   "PRODUCTO": "Auto",
-  "COTIZADOR_URL": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+  "COTIZADOR_URL": "https://example.com/example-insurance/Auto_ADS_91827463",
   "USER_AGENT": "browser"
 }
 ```
@@ -434,7 +434,7 @@ Response del endpoint `quote_click`:
   "ok": true,
   "message": "Click enviado a DANA",
   "type": "quote_click",
-  "redirectUrl": "https://link.mercantilseguros.com/Auto_ADS_91827463",
+  "redirectUrl": "https://example.com/example-insurance/Auto_ADS_91827463",
   "danaSent": true
 }
 ```

@@ -74,7 +74,7 @@ export default function EditProfileForm({ advisor }: EditProfileFormProps) {
           value={form.bio}
           onChange={(event) => setForm({ ...form, bio: event.target.value })}
           rows={4}
-          className="mt-2 w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
+          className="mt-2 w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-demo-blue focus:ring-4 focus:ring-demo-blue/10"
         />
       </label>
       {feedback && (
@@ -85,7 +85,7 @@ export default function EditProfileForm({ advisor }: EditProfileFormProps) {
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-mercantil-blue px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-mercantil-blueDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-demo-blue px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         <Save size={18} />
         {status === 'loading' ? 'Enviando...' : 'Enviar actualización'}
@@ -110,7 +110,7 @@ function Field({ label, value, onChange, type = 'text', className = '' }: FieldP
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-mercantil-blue focus:ring-4 focus:ring-mercantil-blue/10"
+        className="mt-2 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-demo-blue focus:ring-4 focus:ring-demo-blue/10"
       />
     </label>
   );

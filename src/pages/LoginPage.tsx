@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import mercantilIcon from '../assets/brand/Marca_example/logos/icono-mercantil.png';
+import exampleIcon from '../assets/brand/Marca_example/logos/png/example_icon_color.png';
 import { authenticateAdvisor, isAdvisorAuthenticated } from '../utils/auth';
 
 type LoginLocationState = {
@@ -36,7 +36,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10 sm:px-6">
       <section className="w-full max-w-xl rounded-xl border border-[#D0D5DD] bg-white px-6 py-9 shadow-sm sm:px-12 sm:py-12">
-        <img src={mercantilIcon} alt="Mercantil Seguros" className="mx-auto h-24 w-24 object-contain" />
+        <img src={exampleIcon} alt="Example Insurance" className="mx-auto h-24 w-24 object-contain" />
 
         <div className="mx-auto mt-8 max-w-md">
           <h1 className="text-3xl font-extrabold text-[#101828]">Inicia sesión</h1>

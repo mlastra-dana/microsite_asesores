@@ -1,6 +1,6 @@
 # Respuestas para reunion - Microsite de asesores
 
-Documento de apoyo para reunion sobre el microsite de asesores de Mercantil Seguros.
+Documento de apoyo para reunion sobre el microsite de asesores de Example Insurance.
 
 ## Resumen ejecutivo
 
@@ -71,7 +71,7 @@ Respuesta propuesta:
 
 Si, se puede llamar a un API para generarlos o actualizarlos.
 
-DANA puede actuar como orquestador: desde un flujo puede ejecutar nodos API, consumir un servicio del banco o de Mercantil que entregue los enlaces personalizados y guardar esos valores en la lista de contactos del asesor.
+DANA puede actuar como orquestador: desde un flujo puede ejecutar nodos API, consumir un servicio del banco o del cliente que entregue los enlaces personalizados y guardar esos valores en la lista de contactos del asesor.
 
 Para el microsite, el enlace permanente se genera automaticamente desde la Lambda y se devuelve a DANA:
 
@@ -123,7 +123,7 @@ La URL no expone identificadores reales. El enlace usa un `PUBLICID` enmascarado
 ADVISORID
 ```
 
-Identificador unico del asesor provisto por Mercantil Seguros. No se usa en la URL publica.
+Identificador unico del asesor provisto por Example Insurance. No se usa en la URL publica.
 
 ```text
 MICROSITEID
@@ -309,7 +309,7 @@ La informacion productiva se actualiza en DANA. Luego DANA ejecuta el nodo API d
 
 Respuesta:
 
-Puede solicitar actualizacion de datos de contacto/perfil, pero el dato productivo no cambia automaticamente. Debe pasar por el proceso oficial definido por Mercantil/DANA.
+Puede solicitar actualizacion de datos de contacto/perfil, pero el dato productivo no cambia automaticamente. Debe pasar por el proceso oficial definido por cliente o DANA.
 
 ### Que sucede si se reactiva un asesor desactivado?
 

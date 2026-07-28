@@ -28,7 +28,7 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
   return (
     <section id="inicio" className="mx-auto grid min-h-[620px] max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:py-20">
       <div className="text-dana-ink">
-        <p className="mb-5 text-base font-semibold text-mercantil-blue">
+        <p className="mb-5 text-base font-semibold text-demo-blue">
           Asesor digital autorizado
         </p>
         <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-[#101828] sm:text-5xl lg:text-[56px]">
@@ -78,14 +78,14 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
             )}
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-mercantil-blue">
+            <p className="text-sm font-bold uppercase tracking-wide text-demo-blue">
               {isCompanyProfile ? 'Tu seguro, más simple' : 'Tu bienestar, nuestra prioridad'}
             </p>
             <h2 className="mt-2 text-3xl font-extrabold text-dana-ink">
               {advisor.name || 'Asesor de Seguros'}
             </h2>
             {advisor.role && (
-              <p className="text-base font-semibold text-mercantil-blueDark">{advisor.role}</p>
+              <p className="text-base font-semibold text-demo-blueDark">{advisor.role}</p>
             )}
             {advisor.bio && (
               <p className="mt-3 text-sm leading-6 text-dana-muted">{advisor.bio}</p>
@@ -130,7 +130,7 @@ function Info({ icon: Icon, label, value, href }: InfoProps) {
         {label}
       </div>
       {href ? (
-        <a href={href} target="_blank" rel="noreferrer" className="break-words text-sm font-bold text-mercantil-blue hover:text-mercantil-blueDark">
+        <a href={href} target="_blank" rel="noreferrer" className="break-words text-sm font-bold text-demo-blue hover:text-demo-blueDark">
           {value}
         </a>
       ) : (

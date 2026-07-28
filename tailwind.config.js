@@ -15,7 +15,7 @@ export default {
           muted: '#475467',
           cloud: '#F4F7FB',
         },
-        mercantil: {
+        demo: {
           blue: '#00478D',
           blueDark: '#00376E',
           sky: '#009FDA',

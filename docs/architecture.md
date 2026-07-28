@@ -32,7 +32,7 @@ Eventos previstos:
 
 DANAconnect es la fuente principal para los datos del asesor. La lista de contactos `Microsite_asesores` debe tener, al menos estos codes:
 
-- `ADVISORID`: identificador unico del asesor generado por Mercantil Seguros. Se muestra como codigo del asesor dentro del microsite.
+- `ADVISORID`: identificador unico del asesor generado por Example Insurance. Se muestra como codigo del asesor dentro del microsite.
 - `MICROSITEID`: identificador interno del microsite en DANA. Puede cargarse vacio; la Lambda lo genera durante la activacion si no existe. No se expone directamente en la URL publica.
 - `MICROSITEURL`: enlace permanente del microsite.
 - `MICROSITEACTIVADO`: bandera `SI`/`NO` para marcar que el perfil ya fue preparado.

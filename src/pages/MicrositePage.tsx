@@ -10,7 +10,7 @@ import { fetchAdvisorById, provisionAdvisor, trackQuoteClick, type Advisor as Ap
 function emptyAdvisor(id?: string): Advisor {
   return {
     id: id || '',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: '',
     role: 'Asesor de Seguros',
     email: '',
@@ -210,7 +210,7 @@ export default function MicrositePage() {
         {!advisor && isLoadingAdvisor && (
           <section className="flex min-h-screen items-center justify-center px-4 py-16">
             <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-mercantil-blue" />
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-demo-blue" />
               <h1 className="mt-5 text-2xl font-extrabold text-dana-ink">
                 Cargando microsite
               </h1>
@@ -245,7 +245,7 @@ export default function MicrositePage() {
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-                <p className="text-sm font-extrabold uppercase tracking-wide text-mercantil-blue">Catálogo</p>
+                <p className="text-sm font-extrabold uppercase tracking-wide text-demo-blue">Catálogo</p>
                 <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">Cotizadores disponibles</h2>
               </div>
               {isLoadingAdvisor && (
@@ -268,7 +268,7 @@ export default function MicrositePage() {
         <section id="postventa" className="bg-[#F4F7FB] py-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
-              <p className="text-sm font-extrabold uppercase tracking-wide text-mercantil-blue">Post-Venta</p>
+              <p className="text-sm font-extrabold uppercase tracking-wide text-demo-blue">Post-Venta</p>
               <h2 className="mt-3 text-3xl font-extrabold text-dana-ink sm:text-4xl">Servicios para asegurados</h2>
               <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-dana-muted">
                 Accede a los servicios de post-venta y gestión de tu póliza con {advisor.name}
@@ -277,8 +277,8 @@ export default function MicrositePage() {
             
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-mercantil-bluePale">
-                  <svg className="h-7 w-7 text-mercantil-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-demo-bluePale">
+                  <svg className="h-7 w-7 text-demo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
@@ -294,8 +294,8 @@ export default function MicrositePage() {
               </div>
               
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-mercantil-bluePale">
-                  <svg className="h-7 w-7 text-mercantil-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-demo-bluePale">
+                  <svg className="h-7 w-7 text-demo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -311,8 +311,8 @@ export default function MicrositePage() {
               </div>
               
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-mercantil-bluePale">
-                  <svg className="h-7 w-7 text-mercantil-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-demo-bluePale">
+                  <svg className="h-7 w-7 text-demo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
@@ -328,8 +328,8 @@ export default function MicrositePage() {
               </div>
               
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-mercantil-bluePale">
-                  <svg className="h-7 w-7 text-mercantil-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-demo-bluePale">
+                  <svg className="h-7 w-7 text-demo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
@@ -349,14 +349,14 @@ export default function MicrositePage() {
               <p className="text-sm text-dana-muted">
                 También puedes contactar directamente:{" "}
                 {advisor.contactUrl ? (
-                  <a href={advisor.contactUrl} target="_blank" rel="noreferrer" className="font-semibold text-mercantil-blue hover:text-mercantil-blueDark">
+                  <a href={advisor.contactUrl} target="_blank" rel="noreferrer" className="font-semibold text-demo-blue hover:text-demo-blueDark">
                     {advisor.website ?? 'Formulario de contacto'}
                   </a>
                 ) : (
-                  <a href={`mailto:${advisor.email}`} className="font-semibold text-mercantil-blue hover:text-mercantil-blueDark">{advisor.email}</a>
+                  <a href={`mailto:${advisor.email}`} className="font-semibold text-demo-blue hover:text-demo-blueDark">{advisor.email}</a>
                 )}{" "}
                 o{" "}
-                <a href={`tel:${advisor.phone.replace(/\D/g, '')}`} className="font-semibold text-mercantil-blue hover:text-mercantil-blueDark">{advisor.phone}</a>
+                <a href={`tel:${advisor.phone.replace(/\D/g, '')}`} className="font-semibold text-demo-blue hover:text-demo-blueDark">{advisor.phone}</a>
               </p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 {
-  "name": "Microsite asesores | Mercantil Seguros",
+  "name": "Microsite asesores | Example Insurance",
   "short_name": "Asesores",
-  "description": "Portal de acceso al microsite para asesores de Mercantil Seguros.",
+  "description": "Portal de acceso al microsite para asesores de Example Insurance.",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",

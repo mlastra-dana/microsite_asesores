@@ -1,4 +1,4 @@
-const AUTH_KEY = 'mercantil-advisor-authenticated';
+const AUTH_KEY = 'demo-advisor-authenticated';
 
 export function isAdvisorAuthenticated() {
   return sessionStorage.getItem(AUTH_KEY) === 'true';

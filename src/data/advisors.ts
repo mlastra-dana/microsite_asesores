@@ -37,7 +37,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: 'FDF34DAC98DA4246',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: 'Carlos Mendoza',
     role: 'Asesor Patrimonial',
     email: 'carlos.mendoza@examplemail.com',
@@ -51,7 +51,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: 'E3064E9B655B4359',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: 'Valentina Rojas',
     role: 'Consultora de Seguros',
     email: 'valentina.rojas@examplemail.com',
@@ -65,7 +65,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: '5752C96A919B29A5',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: 'Andrea Perez',
     role: 'Asesora comercial',
     email: 'andrea.perez@examplemail.com',
@@ -79,7 +79,7 @@ export const advisors: Advisor[] = [
   },
   {
     id: 'C6B71A95B42475C4',
-    company: 'Mercantil Seguros',
+    company: 'Example Insurance',
     name: 'Luis Herrera',
     role: 'Asesor corporativo',
     email: 'luis.herrera@examplemail.com',

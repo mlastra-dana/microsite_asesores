@@ -6,7 +6,7 @@ Este documento separa lo que ya esta definido para el alcance actual de lo que c
 
 ### `ADVISORID`
 
-`ADVISORID` siempre sera provisto por Mercantil Seguros.
+`ADVISORID` siempre sera provisto por Example Insurance.
 
 Es el identificador unico del asesor dentro del negocio. Se puede mostrar dentro del microsite como codigo del asesor, pero no se usa directamente como identificador publico de la URL.
 
@@ -20,7 +20,7 @@ Control actual:
 
 La URL usa un `PUBLICID` enmascarado y no secuencial. Ese valor no expone ni el `ADVISORID` ni el `MICROSITEID`.
 
-Esto es importante porque el `ADVISORID` de Mercantil es un identificador interno del negocio y puede seguir una logica conocida o secuencial. Si ese valor se usara directamente en la URL, un asesor podria intentar deducir enlaces de otros asesores. Con el `PUBLICID` enmascarado, la URL publica no permite inferir el codigo real ni avanzar por una secuencia.
+Esto es importante porque el `ADVISORID` del cliente es un identificador interno del negocio y puede seguir una logica conocida o secuencial. Si ese valor se usara directamente en la URL, un asesor podria intentar deducir enlaces de otros asesores. Con el `PUBLICID` enmascarado, la URL publica no permite inferir el codigo real ni avanzar por una secuencia.
 
 Control aplicado:
 
@@ -71,7 +71,7 @@ CONTACTOASESOR
 BIOASESOR
 ```
 
-Esas solicitudes no cambian directamente el dato productivo. Deben pasar por el proceso oficial definido por Mercantil/DANA antes de reflejarse en DANA y DynamoDB.
+Esas solicitudes no cambian directamente el dato productivo. Deben pasar por el proceso oficial definido por cliente o DANA antes de reflejarse en DANA y DynamoDB.
 
 ### URLs de cotizadores
 
@@ -165,7 +165,7 @@ Hoy cada producto tiene campos especificos en DANA para habilitarlo y guardar su
 
 Criterio actual:
 
-Mantener campos explicitos por producto para esta etapa. Si Mercantil solicita agregar un producto nuevo, evaluarlo como cambio controlado coordinado por KAM/cliente/equipo tecnico.
+Mantener campos explicitos por producto para esta etapa. Si el cliente solicita agregar un producto nuevo, evaluarlo como cambio controlado coordinado por KAM/cliente/equipo tecnico.
 
 Referencia tecnica futura:
 
@@ -179,7 +179,7 @@ Definir donde debe recibirse y aprobarse una solicitud de actualizacion enviada 
 
 Por que importa:
 
-El microsite puede capturar una solicitud de cambio, pero no debe modificar directamente el dato productivo sin pasar por el proceso oficial de Mercantil/DANA.
+El microsite puede capturar una solicitud de cambio, pero no debe modificar directamente el dato productivo sin pasar por el proceso oficial de cliente o DANA.
 
 Criterio actual:
 
@@ -190,7 +190,7 @@ Opciones de negocio:
 1. Crear una lista de contactos en DANA para solicitudes de actualizacion del asesor.
    Ahi se guardan los datos propuestos, evidencia y estado de revision. Luego un flujo aprobado actualiza la lista principal `Microsite_asesores`.
 
-2. Consumir un servicio de Mercantil/banco para enviar la solicitud al sistema oficial donde viven los datos del asesor.
+2. Consumir un servicio de banco o cliente para enviar la solicitud al sistema oficial donde viven los datos del asesor.
    Cuando ese sistema confirme o aplique el cambio, DANA actualiza la lista principal y ejecuta el nodo API hacia la Lambda.
 
 ### Retencion de eventos operativos
@@ -316,7 +316,7 @@ Alternativas a validar:
 
    La Lambda envia a DANA los datos propuestos por el asesor y DANA los guarda como solicitud pendiente de revision.
 
-2. Servicio oficial de Mercantil.
+2. Servicio oficial de banco o cliente.
 
    La Lambda envia la solicitud a un servicio del banco, y DANA se actualiza cuando ese sistema confirme el cambio.
 

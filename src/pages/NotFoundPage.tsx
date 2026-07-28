@@ -4,12 +4,12 @@ export default function NotFoundPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-dana-cloud px-4">
       <section className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-soft">
-        <p className="text-sm font-extrabold uppercase tracking-wide text-mercantil-blue">404</p>
+        <p className="text-sm font-extrabold uppercase tracking-wide text-demo-blue">404</p>
         <h1 className="mt-3 text-3xl font-extrabold text-dana-ink">Microsite no encontrado</h1>
         <p className="mt-3 text-dana-muted">Puedes volver al microsite principal de TuSeguro.com.</p>
         <Link
           to="/asesor/2377"
-          className="mt-6 inline-flex rounded-full bg-mercantil-blue px-5 py-3 text-sm font-extrabold text-white"
+          className="mt-6 inline-flex rounded-full bg-demo-blue px-5 py-3 text-sm font-extrabold text-white"
         >
           Ir al microsite demo
         </Link>

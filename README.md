@@ -1,6 +1,6 @@
 # Microsite para asesores de seguros
 
-Aplicacion React + TailwindCSS para publicar microsites personalizados de asesores de Mercantil Seguros.
+Aplicacion React + TailwindCSS para publicar microsites personalizados de asesores de Example Insurance.
 
 El flujo productivo actual usa DANAconnect como fuente operativa de datos, AWS Lambda como capa de sincronizacion y DynamoDB como snapshot de lectura para que cada enlace permanente cargue en cualquier navegador.
 
@@ -60,7 +60,7 @@ Eventos relevantes:
 
 - DANAconnect es la fuente operativa. Los datos se cargan o actualizan en la lista de contactos de DANA.
 - El microsite publico carga desde DynamoDB, no consulta DANA en cada visita.
-- `ADVISORID` lo provee siempre Mercantil Seguros y se trata como identificador unico del asesor.
+- `ADVISORID` lo provee siempre Example Insurance y se trata como identificador unico del asesor.
 - La URL publica no expone `ADVISORID` ni `MICROSITEID`; usa un `PUBLICID` enmascarado.
 - Las altas, actualizaciones e inactivaciones se ejecutan desde flujos de DANA con nodos API.
 - El campo `UPDATE` lo escriben los nodos Update de DANA, no la Lambda.
@@ -68,7 +68,7 @@ Eventos relevantes:
 
 ## Identificadores
 
-- `ADVISORID`: codigo unico del asesor generado por Mercantil Seguros. Puede mostrarse dentro del microsite.
+- `ADVISORID`: codigo unico del asesor generado por Example Insurance. Puede mostrarse dentro del microsite.
 - `MICROSITEID`: identificador interno guardado en DANA. No se expone en la URL publica.
 - `advisorId` en Lambda/Dynamo: `PUBLICID` enmascarado usado en `/asesor/{PUBLICID}`.
 - `MICROSITEURL`: enlace permanente publico que se guarda en DANA y se envia al asesor.

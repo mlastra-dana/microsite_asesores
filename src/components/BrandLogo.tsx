@@ -1,5 +1,5 @@
-import centenaryLogo from '../assets/brand/Marca_example/logos/IMG_5977.jpg';
-import mercantilLogo from '../assets/brand/Marca_example/logos/mercantilseguros.png';
+import exampleIcon from '../assets/brand/Marca_example/logos/png/example_icon_color.png';
+import exampleInsuranceLogo from '../assets/brand/Marca_example/logos/png/example_insurance_color.png';
 
 type BrandLogoProps = {
   className?: string;
@@ -11,8 +11,8 @@ export default function BrandLogo({ className = '', inverse = false, showName = 
   return (
     <div className={`inline-flex items-center ${className}`}>
       <img
-        src={showName ? mercantilLogo : centenaryLogo}
-        alt={showName ? 'Mercantil Seguros' : 'Mercantil Seguros 100 años'}
+        src={showName ? exampleInsuranceLogo : exampleIcon}
+        alt={showName ? 'Example Insurance' : 'Example Insurance icon'}
         className={`w-auto object-contain ${
           showName ? 'h-11' : 'h-12'
         } ${inverse ? 'rounded-md bg-white px-2 py-1' : ''}`}

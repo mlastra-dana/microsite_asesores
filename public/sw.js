@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mercantil-asesores-v1';
+const CACHE_NAME = 'demo-asesores-v1';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.png', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
