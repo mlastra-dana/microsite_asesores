@@ -43,7 +43,7 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
               href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#00478D] px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-demo-blue px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
             >
               <MessageCircle size={19} />
               Escríbeme por WhatsApp
@@ -53,7 +53,7 @@ export default function AdvisorCard({ advisor }: AdvisorCardProps) {
             <button
               type="button"
               onClick={() => downloadVCard(advisor)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#00478D] px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-demo-blue px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
             >
               <Download size={19} />
               Descargar mi contacto

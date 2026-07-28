@@ -292,7 +292,7 @@ export default function MicrositePage() {
                 <button
                   type="button"
                   onClick={() => openAdvisorContact('Gestión del asegurado')}
-                  className="mt-4 w-full rounded-lg bg-[#00478D] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+                  className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar gestión
                 </button>
@@ -309,7 +309,7 @@ export default function MicrositePage() {
                 <button
                   type="button"
                   onClick={() => openAdvisorContact('Gestión de reembolsos')}
-                  className="mt-4 w-full rounded-lg bg-[#00478D] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+                  className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar reembolso
                 </button>
@@ -343,7 +343,7 @@ export default function MicrositePage() {
                 <button
                   type="button"
                   onClick={() => openAdvisorContact('Cambios en mi póliza')}
-                  className="mt-4 w-full rounded-lg bg-[#00478D] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+                  className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar cambio
                 </button>

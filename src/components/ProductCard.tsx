@@ -10,7 +10,7 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
 
   if (product.featured) {
     return (
-      <article className="flex h-full flex-col rounded-2xl bg-[#00478D] p-6 text-white shadow-soft ring-1 ring-[#00376E] transition hover:-translate-y-0.5 hover:shadow-lg sm:col-span-2 lg:col-span-2">
+      <article className="flex h-full flex-col rounded-2xl bg-demo-blue p-6 text-white shadow-soft ring-1 ring-demo-blueDark transition hover:-translate-y-0.5 hover:shadow-lg sm:col-span-2 lg:col-span-2">
         <div className="flex items-start justify-between gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-white/70">
             <img src={product.logoUrl} alt="" className="h-11 w-11 object-contain" />
@@ -29,7 +29,7 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
             target="_blank"
             rel="noreferrer"
             onClick={() => onQuoteClick?.(product)}
-            className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-[#00478D] shadow-sm transition hover:bg-[#F4F7FB]"
+            className="mt-6 rounded-lg bg-white px-5 py-3 text-center text-sm font-extrabold text-demo-blue shadow-sm transition hover:bg-[#F4F7FB]"
           >
             {product.ctaLabel ?? 'Cotizar'}
           </a>
@@ -55,7 +55,7 @@ export default function ProductCard({ product, onQuoteClick }: ProductCardProps)
           target="_blank"
           rel="noreferrer"
           onClick={() => onQuoteClick?.(product)}
-          className="mt-5 rounded-lg bg-[#00478D] px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+          className="mt-5 rounded-lg bg-demo-blue px-5 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
         >
           {product.ctaLabel ?? 'Cotizar'}
         </a>

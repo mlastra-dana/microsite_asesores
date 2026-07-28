@@ -51,14 +51,14 @@ export default function LoginPage() {
                   setError('');
                 }}
                 autoComplete="username"
-                className="mt-2 w-full rounded-lg border border-[#D0D5DD] bg-white px-4 py-3.5 text-base outline-none transition placeholder:text-[#667085] focus:border-[#00478D] focus:ring-4 focus:ring-[#00478D]/10"
+                className="mt-2 w-full rounded-lg border border-[#D0D5DD] bg-white px-4 py-3.5 text-base outline-none transition placeholder:text-[#667085] focus:border-demo-blue focus:ring-4 focus:ring-demo-blue/10"
                 placeholder="tuasesor"
               />
             </label>
 
             <label className="block">
               <span className="text-sm font-bold text-[#344054]">Contraseña</span>
-              <span className="mt-2 flex items-center rounded-lg border border-[#D0D5DD] bg-white px-4 transition focus-within:border-[#00478D] focus-within:ring-4 focus-within:ring-[#00478D]/10">
+              <span className="mt-2 flex items-center rounded-lg border border-[#D0D5DD] bg-white px-4 transition focus-within:border-demo-blue focus-within:ring-4 focus-within:ring-demo-blue/10">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
-                  className="text-[#667085] transition hover:text-[#00478D]"
+                  className="text-[#667085] transition hover:text-demo-blue"
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-[#00478D] px-5 py-3.5 text-base font-extrabold text-white shadow-sm transition hover:bg-[#00376E]"
+              className="w-full rounded-lg bg-demo-blue px-5 py-3.5 text-base font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
             >
               Iniciar sesión
             </button>

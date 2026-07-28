@@ -142,7 +142,7 @@ export default function ActivationPage() {
             
             <button
               onClick={handleBackToDemo}
-              className="mt-6 w-full rounded-lg bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
+              className="mt-6 w-full rounded-lg bg-demo-blue px-5 py-3 text-sm font-extrabold text-white transition hover:bg-demo-blueDark"
             >
               Volver al microsite demo
             </button>
@@ -165,7 +165,7 @@ export default function ActivationPage() {
         <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-12">
           <div className="w-full max-w-md rounded-[28px] bg-white p-8 text-center shadow-soft">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#E6EDF5]">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#00478D] border-t-transparent"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-demo-blue border-t-transparent"></div>
             </div>
             
             <h1 className="text-2xl font-extrabold text-[#111827]">
@@ -213,7 +213,7 @@ export default function ActivationPage() {
             
             <button
               onClick={handleBackToHome}
-              className="mt-6 w-full rounded-lg bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E]"
+              className="mt-6 w-full rounded-lg bg-demo-blue px-5 py-3 text-sm font-extrabold text-white transition hover:bg-demo-blueDark"
             >
               Volver al inicio
             </button>
@@ -282,28 +282,28 @@ export default function ActivationPage() {
               <div className="space-y-3">
                 {advisor?.email && (
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[#00478D]" />
+                    <Mail className="h-4 w-4 text-demo-blue" />
                     <span className="text-sm text-[#6B7280]">{advisor.email}</span>
                   </div>
                 )}
 
                 {advisor?.phone && (
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-[#00478D]" />
+                    <Phone className="h-4 w-4 text-demo-blue" />
                     <span className="text-sm text-[#6B7280]">{advisor.phone}</span>
                   </div>
                 )}
 
                 {advisor?.advisorCode && (
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-[#00478D]" />
+                    <User className="h-4 w-4 text-demo-blue" />
                     <span className="text-sm text-[#6B7280]">Código: {advisor.advisorCode}</span>
                   </div>
                 )}
 
                 {advisor?.city && (
                   <div className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-[#00478D]" />
+                    <Briefcase className="h-4 w-4 text-demo-blue" />
                     <span className="text-sm text-[#6B7280]">{advisor.city}</span>
                   </div>
                 )}
@@ -321,7 +321,7 @@ export default function ActivationPage() {
                   type="button"
                   onClick={handleActivateMicrosite}
                   disabled={isActivating}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#00478D] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#00376E] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-demo-blue px-5 py-3 text-sm font-extrabold text-white transition hover:bg-demo-blueDark disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <ExternalLink className="h-4 w-4" />
                   {isActivating ? 'Preparando...' : 'Ir a mi microsite'}
@@ -341,15 +341,15 @@ export default function ActivationPage() {
               
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-demo-blue"></div>
                   <span className="text-sm text-[#6B7280]">Abriremos tu enlace personalizado.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-demo-blue"></div>
                   <span className="text-sm text-[#6B7280]">Entrarás al microsite para guardar el enlace en tu teléfono.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#00478D]"></div>
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-demo-blue"></div>
                   <span className="text-sm text-[#6B7280]">Entrarás directamente a tu microsite.</span>
                 </li>
               </ul>

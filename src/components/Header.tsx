@@ -20,7 +20,7 @@ export default function Header({ advisor }: HeaderProps) {
             <a href={`/asesor/${advisor.id}#postventa`} className="hover:text-demo-blue">Post-Venta</a>
             <Link
               to={`/asesor/${advisor.id}/actualizar`}
-              className="rounded-lg bg-[#00478D] px-4 py-2 text-white shadow-sm transition hover:bg-[#00376E]"
+              className="rounded-lg bg-demo-blue px-4 py-2 text-white shadow-sm transition hover:bg-demo-blueDark"
             >
               Actualizar datos
             </Link>
@@ -30,7 +30,7 @@ export default function Header({ advisor }: HeaderProps) {
         <div className="flex items-center gap-2 md:hidden">
           <Link
             to={`/asesor/${advisor.id}/actualizar`}
-            className="rounded-lg bg-[#00478D] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00376E]"
+            className="rounded-lg bg-demo-blue px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-demo-blueDark"
           >
             Actualizar
           </Link>
