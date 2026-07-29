@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AdvisorCard from '../components/AdvisorCard';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
+import WabaWebWidget from '../components/WabaWebWidget';
 import { getAdvisorById, hasAdvisorById, type Advisor } from '../data/advisors';
 import { products, type Product } from '../data/products';
 import { fetchAdvisorById, provisionAdvisor, trackQuoteClick, type Advisor as ApiAdvisor } from '../utils/api';
@@ -368,6 +369,7 @@ export default function MicrositePage() {
             </div>
           </div>
         </section>
+        <WabaWebWidget advisor={advisor} />
           </>
         )}
       </main>
