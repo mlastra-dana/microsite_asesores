@@ -195,6 +195,20 @@ export default function MicrositePage() {
     window.open(`mailto:${advisor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`Hola ${advisor.name}, necesito ayuda con:`)}`);
   }
 
+  function openPostSaleLink(linkKey: keyof NonNullable<Advisor['postSaleLinks']>, subject: string) {
+    if (!advisor) {
+      return;
+    }
+
+    const postSaleUrl = advisor.postSaleLinks?.[linkKey];
+    if (postSaleUrl) {
+      window.open(postSaleUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    openAdvisorContact(subject);
+  }
+
   function handleQuoteClick(product: Product) {
     if (!advisor || !product.url) {
       return;
@@ -294,7 +308,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Actualización de datos personales y contacto</p>
                 <button
                   type="button"
-                  onClick={() => openAdvisorContact('Gestión del asegurado')}
+                  onClick={() => openPostSaleLink('insuredManagement', 'Gestión del asegurado')}
                   className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar gestión
@@ -311,7 +325,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Solicitud y seguimiento de reembolsos</p>
                 <button
                   type="button"
-                  onClick={() => openAdvisorContact('Gestión de reembolsos')}
+                  onClick={() => openPostSaleLink('reimbursements', 'Gestión de reembolsos')}
                   className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar reembolso
@@ -328,10 +342,10 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Atención inmediata para situaciones urgentes</p>
                 <button
                   type="button"
-                  onClick={() => window.open(`tel:${advisor.phone.replace(/\D/g, '')}`)}
+                  onClick={() => openPostSaleLink('emergency', 'Reportar emergencia')}
                   className="mt-4 w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-700"
                 >
-                  Llamar emergencia
+                  Reportar emergencia
                 </button>
               </div>
               
@@ -345,7 +359,7 @@ export default function MicrositePage() {
                 <p className="mt-2 text-sm text-dana-muted">Modificaciones, actualizaciones y renovaciones</p>
                 <button
                   type="button"
-                  onClick={() => openAdvisorContact('Cambios en mi póliza')}
+                  onClick={() => openPostSaleLink('policyChanges', 'Cambios en mi póliza')}
                   className="mt-4 w-full rounded-lg bg-demo-blue px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-demo-blueDark"
                 >
                   Solicitar cambio

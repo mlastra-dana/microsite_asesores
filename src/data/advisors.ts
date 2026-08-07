@@ -1,5 +1,3 @@
-import tuSeguroLogo from '../assets/advisors/tuseguro-logo.svg';
-
 export type Advisor = {
   id: string;
   company: string;
@@ -16,24 +14,46 @@ export type Advisor = {
   bio: string;
   products: string[];
   productLinks?: Record<string, string>;
+  postSaleLinks?: {
+    insuredManagement?: string;
+    reimbursements?: string;
+    emergency?: string;
+    policyChanges?: string;
+  };
 };
 
 export const advisors: Advisor[] = [
   {
     id: '9F3806A23CEA5138',
-    company: 'Arroba Seguros Sociedad de Corretaje de Seguros, C.A.',
-    name: 'TuSeguro.com',
-    role: 'Asesores digitales expertos en seguros',
-    email: '',
-    website: 'tuseguro.com',
-    contactUrl: 'https://tuseguro.com/contactanos/',
-    phone: '+58 (212) 628.14.55',
-    whatsapp: '573209926066',
-    city: 'Caracas, Venezuela',
-    advisorCode: 'SUDEASEG S-69',
-    photoUrl: tuSeguroLogo,
-    bio: 'Compara opciones para proteger tu salud, automóvil, mascotas y viajes con el respaldo de especialistas de amplia trayectoria en Latinoamérica.',
-    products: ['Vida', 'Auto', 'Salud', 'Hogar'],
+    company: 'Example Insurance',
+    name: 'Daniela Rivero',
+    role: 'Asesora de Seguros',
+    email: 'daniela.rivero@examplemail.com',
+    website: 'example.com/example-insurance',
+    contactUrl: 'https://example.com/example-insurance/contacto',
+    phone: '04122150873',
+    whatsapp: '584224220520',
+    city: 'Caracas',
+    advisorCode: 'ADS-91827463',
+    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=640&q=80',
+    bio: 'Acompaño a familias caraqueñas a elegir coberturas de salud, auto y hogar con seguimiento cercano.',
+    products: ['Cotizador Simplificado', 'Vida', 'Auto', 'Salud', 'Emergencias Médicas', 'Platino', 'Travel', 'Hogar'],
+    productLinks: {
+      'Cotizador Simplificado': 'https://example.com/microsite-demo/daniela-rivero/simplificado',
+      Vida: 'https://example.com/microsite-demo/daniela-rivero/vitales',
+      Auto: 'https://example.com/microsite-demo/daniela-rivero/auto',
+      Salud: 'https://example.com/microsite-demo/daniela-rivero/salud',
+      'Emergencias Médicas': 'https://example.com/microsite-demo/daniela-rivero/emergencias-medicas',
+      Platino: 'https://example.com/microsite-demo/daniela-rivero/platino',
+      Travel: 'https://example.com/microsite-demo/daniela-rivero/travel',
+      Hogar: 'https://example.com/microsite-demo/daniela-rivero/cr',
+    },
+    postSaleLinks: {
+      insuredManagement: 'https://example.com/example-insurance/postventa/gestion-asegurado',
+      reimbursements: 'https://example.com/example-insurance/postventa/reembolsos',
+      emergency: 'https://example.com/example-insurance/postventa/emergencias',
+      policyChanges: 'https://example.com/example-insurance/postventa/cambios-poliza',
+    },
   },
   {
     id: 'FDF34DAC98DA4246',
